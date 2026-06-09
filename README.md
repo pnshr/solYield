@@ -1,0 +1,269 @@
+# Solana Yield Adapter Standard
+
+Bounty-readiness work-in-progress reference implementation for a minimal Solana
+yield adapter standard built with Anchor `0.31.1` and Solana `2.2.20`.
+
+The standard has three public adapter calls:
+
+- `deposit`
+- `withdraw`
+- `current_value`
+
+The repo includes a governance-gated registry, a dispatcher that routes only to
+approved adapters, a reusable adapter template, real MarginFi USDC, Kamino USDC
+direct reserve, Jupiter Perps JLP, Maple syrupUSDC asset-position, and Drift
+Insurance Fund request-remove paths, SDK helpers, examples, and mainnet-fork
+tooling.
+
+Current bounty readiness: not submission-ready. The baseline audit score was
+`58 / 100`; the target is `95+`. Jupiter and Drift fork paths remain P0
+blockers (oracle-freshness and discriminator-mismatch respectively — both
+precisely characterised in committed failing manifests). The Maple adapter is
+honest syrupUSDC custody rather than a real protocol integration. The public
+GitHub repo must be published before final submission. Registry is deployed to
+devnet (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`). All five fork-test
+manifests are committed. See `docs/BOUNTY_100_POINT_PLAN.md` for the
+authoritative execution plan.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  User["User or SDK"] --> Dispatcher["Dispatcher Program"]
+  Dispatcher --> Registry["Registry AdapterEntry PDA"]
+  Registry --> Dispatcher
+  Dispatcher --> Adapter["Approved Adapter Program"]
+  Adapter --> Protocol["External Protocol Accounts"]
+  Adapter --> Dispatcher
+```
+
+Flow:
+
+1. Governance proposes and approves an adapter in the registry.
+2. The dispatcher validates the adapter entry PDA, status, adapter program id,
+   requested mint, and nonzero amounts.
+3. The dispatcher CPIs into the adapter using the standard account prefix.
+4. The adapter validates protocol-specific accounts and performs the protocol or
+   token CPI for its documented position model.
+
+## Setup
+
+```sh
+npm install
+```
+
+Required local tools:
+
+- Anchor `0.31.1`
+- Solana CLI `2.2.20`
+- Node.js `20+`
+
+`Cargo.lock` is committed intentionally. The Solana `2.2.20` SBF toolchain uses
+a Rust compiler that cannot build some newer transitive crate releases, so keep
+the lockfile in review and avoid broad `cargo update` changes unless you are
+also revalidating `anchor build`.
+
+## Build
+
+```sh
+npm run build
+```
+
+Equivalent:
+
+```sh
+anchor build
+```
+
+## Tests
+
+Unit tests:
+
+```sh
+npm run test:unit
+```
+
+Integration tests:
+
+```sh
+npm run test:integration
+```
+
+Full Anchor test entrypoint:
+
+```sh
+npm test
+```
+
+TypeScript validation:
+
+```sh
+npm run typecheck
+```
+
+## Mainnet-Fork Tests
+
+Generate a validator command and deterministic wallet fixtures:
+
+```sh
+MAINNET_RPC_URL=<RPC_URL> FORK_USER_PUBKEY=<ANCHOR_WALLET_PUBKEY> npm run clone:mainnet -- marginfi
+```
+
+Start `solana-test-validator` with the printed `commands.validator`, then run:
+
+```sh
+npm run test:fork:marginfi
+```
+
+The printed validator command includes `--bpf-program` entries for the local
+dispatcher, registry, and selected adapter binaries, so run `anchor build`
+before starting the fork validator. It also includes `--warp-slot`; override
+`FORK_WARP_SLOT` if a protocol account requires testing at a different slot.
+
+Supported fork commands:
+
+```sh
+npm run test:fork
+npm run test:fork:kamino
+npm run test:fork:marginfi
+npm run test:fork:jupiter
+npm run test:fork:maple
+npm run test:fork:drift
+```
+
+MarginFi, Kamino, and Maple have locally passing dispatcher-driven fork flows.
+Jupiter and Drift have typed real CPI paths, but their fork tests are still
+blocked by protocol runtime requirements documented in
+`docs/INTEGRATION_NOTES.md`. Per-adapter fork status, the reproducible
+clone→validator→test procedure, and machine-readable run manifests are tracked
+in `docs/MAINNET_FORK_TEST_RESULTS.md` and `tests/mainnet-fork/manifests/`.
+Kamino uses direct reserve collateral mint/redeem.
+Jupiter targets Jupiter Perps JLP v2 USDC add/remove-liquidity. Maple custodies
+pre-existing Solana syrupUSDC and values it in native syrupUSDC units; it does
+not fake CCIP mint/redeem. Drift withdraw maps to a request-remove flow because
+Drift enforces delayed insurance-fund unstaking.
+
+## Devnet Deployment
+
+Plan the registry deployment commands:
+
+```sh
+npm run deploy:devnet:plan
+```
+
+Deploy the registry program to devnet and initialize the registry PDA if needed:
+
+```sh
+DEVNET_RPC_URL=https://api.devnet.solana.com \
+REGISTRY_AUTHORITY_KEYPAIR=~/.config/solana/id.json \
+npm run deploy:devnet
+```
+
+Flags:
+
+- `--skip-build`
+- `--skip-deploy`
+- `--skip-init`
+- `--print-only`
+
+## Adapter Status
+
+| Adapter | Status | Notes |
+| --- | --- | --- |
+| Adapter template | Complete template | Mock accounting only; no protocol CPI. |
+| MarginFi USDC | Real path implemented | Dispatcher + registry + adapter CPI; fork harness included. |
+| Kamino USDC | Real direct reserve path | Reserve deposit/redeem CPI and collateral value math implemented; refreshReserve and queued-withdrawal extensions are documented limitations. |
+| Jupiter LP | Blocked fork path | USDC add/remove-liquidity CPI, JLP share accounting, and AUM/supply value math implemented; fork deposit still fails Jupiter Perps oracle freshness. Doves replay is blocked by keeper signer validation. |
+| Maple syrupUSDC | Real asset-position path | Custodies user-owned syrupUSDC in a PDA vault and returns native syrupUSDC value; CCIP mint/redeem is a documented future extension. |
+| Drift Insurance Fund | Blocked fork path | Request-remove adapter path implemented; fork setup currently needs exact deployed Drift IDL/discriminator alignment before the CPI can be claimed passing. |
+
+## TypeScript SDK
+
+SDK helpers live in `sdk/ts/src/index.ts`.
+
+They include PDA derivation, registry governance calls, and dispatcher route
+helpers:
+
+- `deriveRegistryConfigPda`
+- `deriveAdapterEntryPda`
+- `initializeRegistry`
+- `proposeAdapter`
+- `approveAdapter`
+- `pauseAdapter`
+- `unpauseAdapter`
+- `deprecateAdapter`
+- `updateAdapterMetadata`
+- `transferGovernance`
+- `dispatcherDeposit`
+- `dispatcherWithdraw`
+- `dispatcherCurrentValue`
+
+Runnable examples live in `examples/`.
+
+## Build Your Own Adapter
+
+Start with `docs/BUILD_ADAPTER.md`.
+
+Short version:
+
+1. Copy `programs/adapters/adapter-template`.
+2. Keep `deposit`, `withdraw`, and `current_value`.
+3. Keep the standard four-account dispatcher prefix.
+4. Add protocol-specific accounts after the prefix.
+5. Validate every protocol account before CPI.
+6. Add compliance, integration, and mainnet-fork tests.
+7. Document every unresolved integration detail in
+   `docs/INTEGRATION_NOTES.md`.
+
+## Known Limitations
+
+- The registry uses single-key governance for this reference implementation.
+- The dispatcher does not understand protocol-specific accounts; adapters must
+  validate them.
+- `current_value` is standardized as `u64` native mint units, which is simple but
+  may need extension for multi-asset positions.
+- Maple syrupUSDC supports the Solana yield-bearing token position, not native
+  CCIP mint/redeem. The fork test preloads syrupUSDC because real mint authority
+  is unavailable.
+- Jupiter JLP uses conservative built-in slippage guards because the minimal
+  standard does not yet pass caller-specified slippage parameters.
+- Jupiter JLP fork deposit is blocked by strict Doves/Edge oracle freshness in
+  static cloned state. Phase 2 verified the current Doves AG/Edge account and
+  Doves update instruction shape, but replaying mainnet Doves updates fails
+  `InvalidSigner(6006)` because the signed payload is bound to the original
+  keeper signer. The repository does not fake oracle data or keeper signatures.
+- Kamino direct reserve `current_value` does not refresh reserve/oracle state,
+  and queued withdrawals are not implemented.
+- Drift final settlement after the unstaking period is intentionally left as a
+  documented future extension; the standard `withdraw` call requests removal.
+- Drift fork setup currently fails before dispatcher deposit because the pinned
+  SDK IDL and deployed Drift instruction namespace/discriminators need exact
+  alignment.
+- Mainnet-fork reliability depends on RPC account cloning support and rate
+  limits.
+
+## Bounty Submission Checklist
+
+This checklist tracks current repository assets. It is not a final readiness
+claim until all unchecked P0 gates pass.
+
+- [x] Minimal standard surface documented.
+- [x] Registry and dispatcher implemented.
+- [x] Adapter template and compliance tests included.
+- [x] MarginFi USDC real path implemented without fake protocol state.
+- [x] Kamino USDC direct reserve path implemented without fake reserve state.
+- [x] Jupiter Perps JLP v2 path implemented without fake pool state.
+- [x] Drift Insurance Fund request-remove path implemented without fake final
+      settlement.
+- [x] Maple syrupUSDC is implemented as an honest asset-position adapter and
+      does not fake CCIP mint/redeem.
+- [x] Mainnet-fork clone/test commands documented.
+- [x] SDK helpers and examples included.
+- [x] Devnet registry deployment script included.
+- [x] All unresolved placeholders use searchable `TODO_INTEGRATION:` markers and
+      are tracked in `docs/INTEGRATION_NOTES.md`.
+- [ ] Jupiter mainnet-fork test passes end-to-end (currently blocked: `StaleOraclePrice(6003)`, oracle-freshness — failing manifest committed with root-cause).
+- [ ] Drift mainnet-fork test passes end-to-end (currently blocked: discriminator mismatch — failing manifest committed with root-cause).
+- [x] All five adapter fork test results are recorded and reproducible (`tests/mainnet-fork/manifests/`).
+- [x] Registry is deployed to devnet (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`) and deployment proof committed (`deployments/devnet/registry.json`).
+- [ ] Public GitHub repository is clean and published.

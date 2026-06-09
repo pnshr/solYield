@@ -1,0 +1,55 @@
+{
+  "adapter": "jupiter",
+  "displayName": "Jupiter LP",
+  "repoCommit": null,
+  "generatedAt": "2026-06-09T09:54:35.118Z",
+  "cluster": "mainnet-fork",
+  "rpcUrl": "https://solana-rpc.publicnode.com",
+  "baseSlot": 425279231,
+  "warpSlot": "425279231",
+  "localPrograms": [
+    {
+      "label": "dispatcher",
+      "programId": "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A",
+      "soPath": "target/deploy/dispatcher.so",
+      "soSha256": "f28611a10b5578befbb43744cbcaed259fe9e283be2978de61d9a7c7ea046dfd"
+    },
+    {
+      "label": "registry",
+      "programId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
+      "soPath": "target/deploy/registry.so",
+      "soSha256": "aa42479ea0a1dae7dcd84df7be71341ddec94fea31af6d8bc4ebda843be6a188"
+    },
+    {
+      "label": "jupiter-lp adapter",
+      "programId": "daJFQSrSNB3zApEGUjZuWEXnVhM2vmjpDptc1cG9s6D",
+      "soPath": "target/deploy/jupiter_lp.so",
+      "soSha256": "39d550b4611550c57e2a3044c93735e78149634f33077bf9a0733a162138cd12"
+    }
+  ],
+  "clonedAccounts": [],
+  "fundedFixtures": [
+    {
+      "label": "funded user SOL account",
+      "address": "9B4MhXCsqr2SyQNRw4KoakcwriqN637GhpjxCnaafSmd",
+      "fixtureSha256": "707f7d9cc8e6b30f97eae9a26777261dbc9c1b672c252312736883431f425448"
+    },
+    {
+      "label": "funded USDC token account",
+      "address": "5JHYHnWR2Ngt43krW6zynw9RCcmYGCwcFzinpZnt1ijN",
+      "fixtureSha256": "4117147a0a2e3e27a37682b1c770bc716d5f524bd524bc131e81f3b812cb1c69"
+    }
+  ],
+  "commands": {
+    "clone": "npm run clone:mainnet -- jupiter",
+    "validator": "bash .mainnet-fork-fixtures/start-jupiter-validator.sh",
+    "test": "npm run test:fork:jupiter"
+  },
+  "testOutcome": {
+    "status": "failed",
+    "mochaExitCode": 1,
+    "durationMs": 2976,
+    "runAt": "2026-06-09T09:54:35.122Z"
+  },
+  "notes": "ROOT CAUSE (reproduced 2026-06-09): Jupiter Perpetuals (PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu) throws StaleOraclePrice (6003) at programs/perpetuals/src/state/oracle.rs:265 on the first addLiquidity2 instruction. The Anchor require_gte! check fires with Left=5, Right=66653: oracle.last_update_time (5, effectively Unix-epoch-zero) < current_unix_timestamp - max_oracle_age_sec (66653 = ~18.5 hours back from the fork's clock). The Doves/Edge oracle price accounts (DoVEsk76QybCEHQGzkvYPWLQu9gzNoZZZt3TPiL597e) are static mainnet snapshots cloned at baseSlot=425279231; their stored publish_time is not refreshed by the fork validator, so the Jupiter program's freshness gate rejects every transaction. ATTEMPTED WORKAROUND: replaying a real on-chain Doves oracle update CPI fails with InvalidSigner(6006) — the keeper that signs oracle updates holds a private key unknown to us. WHAT IS NEEDED TO FIX: either (a) run a live oracle keeper co-located with the fork validator to post fresh Doves prices, or (b) modify the cloned oracle account fixtures to inject a publish_time equal to the fork's current unix_timestamp (requires knowing the exact byte offset of publish_time in the Doves price account layout). Neither path is available in the current static-fork setup."
+}

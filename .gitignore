@@ -1,0 +1,12 @@
+target/
+.anchor/
+node_modules/
+dist/
+coverage/
+.env
+*.log
+.mainnet-fork-fixtures/
+.mainnet-fork-ledger/
+/tmp/
+test-ledger/
+*.keypair.json

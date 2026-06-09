@@ -1,0 +1,43 @@
+[toolchain]
+anchor_version = "0.31.1"
+solana_version = "2.2.20"
+package_manager = "npm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+dispatcher = "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A"
+registry = "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn"
+adapter_template = "HQ43j9nP1vEaLGVbo2M19ijmGf5aG6UA5FTBspkNZ5GR"
+kamino_usdc = "G4g2RMwZs2dH2sVe3ChQ4VpM2DNZu8EESdRyHTc3P9T4"
+marginfi_usdc = "ZZcKiv9h3ACNoXubmys1zWY9yFTjif6x6tb3Us4voyr"
+jupiter_lp = "daJFQSrSNB3zApEGUjZuWEXnVhM2vmjpDptc1cG9s6D"
+maple_syrup = "CnAVx7eyK1MZdkQVAWZMVE9B9aXFcxKmv8bS8dEpgvsC"
+drift_insurance_fund = "mWDRjDXGpQupue6j74cdWJD7BJ1XygdaxU7vc52BLve"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npm run ts-test"
+
+[test]
+startup_wait = 30000
+
+[workspace]
+members = [
+  "programs/dispatcher",
+  "programs/registry",
+  "programs/adapters/adapter-template",
+  "programs/adapters/kamino-usdc",
+  "programs/adapters/marginfi-usdc",
+  "programs/adapters/jupiter-lp",
+  "programs/adapters/maple-syrup",
+  "programs/adapters/drift-insurance-fund",
+]

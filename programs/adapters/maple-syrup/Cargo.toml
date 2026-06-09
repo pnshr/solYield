@@ -1,0 +1,20 @@
+[package]
+name = "maple-syrup"
+version = "0.1.0"
+description = "Maple syrupUSDC asset-position adapter for the Solana Yield Adapter Standard."
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "maple_syrup"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = { workspace = true }

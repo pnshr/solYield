@@ -1,0 +1,92 @@
+{
+  "adapter": "marginfi",
+  "displayName": "MarginFi USDC",
+  "repoCommit": null,
+  "generatedAt": "2026-06-08T15:34:38.948Z",
+  "cluster": "mainnet-fork",
+  "rpcUrl": "https://solana-rpc.publicnode.com",
+  "baseSlot": 424920882,
+  "warpSlot": "424920882",
+  "localPrograms": [
+    {
+      "label": "dispatcher",
+      "programId": "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A",
+      "soPath": "target/deploy/dispatcher.so",
+      "soSha256": "f28611a10b5578befbb43744cbcaed259fe9e283be2978de61d9a7c7ea046dfd"
+    },
+    {
+      "label": "registry",
+      "programId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
+      "soPath": "target/deploy/registry.so",
+      "soSha256": "aa42479ea0a1dae7dcd84df7be71341ddec94fea31af6d8bc4ebda843be6a188"
+    },
+    {
+      "label": "marginfi-usdc adapter",
+      "programId": "ZZcKiv9h3ACNoXubmys1zWY9yFTjif6x6tb3Us4voyr",
+      "soPath": "target/deploy/marginfi_usdc.so",
+      "soSha256": "1cf4a6650f912a4c2adacec5c4269c1fb64a0365219ca871cfbfd1bf4a1d62d8"
+    }
+  ],
+  "clonedAccounts": [
+    {
+      "label": "MarginFi v2 program",
+      "address": "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",
+      "kind": "upgradeable-program",
+      "dataSha256": null
+    },
+    {
+      "label": "MarginFi production group",
+      "address": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "kind": "account",
+      "dataSha256": "7fa96f8657ffea54c0e751e732de62c8fd369c797fd5753c31bf7d48dd505646"
+    },
+    {
+      "label": "MarginFi USDC bank",
+      "address": "2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB",
+      "kind": "account",
+      "dataSha256": "29d7eb1bef26236c104552e7112bde608dbd5540a9517fdd897dcf90fdefbc3d"
+    },
+    {
+      "label": "MarginFi USDC liquidity vault",
+      "address": "7jaiZR5Sk8hdYN9MxTpczTcwbWpb5WEoxSANuUwveuat",
+      "kind": "account",
+      "dataSha256": "9e755e6573754cd83073fb17123576ee7fbf4fe841bb60364a7e96d9dcd9422d"
+    },
+    {
+      "label": "MarginFi USDC oracle",
+      "address": "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
+      "kind": "account",
+      "dataSha256": "cb7864f1280084ef41159cedce43840be4b20ff6f9ce9b8ac7c236c4b137963c"
+    },
+    {
+      "label": "USDC mint",
+      "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "kind": "account",
+      "dataSha256": "ca186d483905b7bb0ea2391a58fd450a1917b350c64264326658299d7cc6151f"
+    }
+  ],
+  "fundedFixtures": [
+    {
+      "label": "funded user SOL account",
+      "address": "9B4MhXCsqr2SyQNRw4KoakcwriqN637GhpjxCnaafSmd",
+      "fixtureSha256": "707f7d9cc8e6b30f97eae9a26777261dbc9c1b672c252312736883431f425448"
+    },
+    {
+      "label": "funded USDC token account",
+      "address": "5JHYHnWR2Ngt43krW6zynw9RCcmYGCwcFzinpZnt1ijN",
+      "fixtureSha256": "4117147a0a2e3e27a37682b1c770bc716d5f524bd524bc131e81f3b812cb1c69"
+    }
+  ],
+  "commands": {
+    "clone": "npm run clone:mainnet -- marginfi",
+    "validator": "bash .mainnet-fork-fixtures/start-marginfi-validator.sh",
+    "test": "npm run test:fork:marginfi"
+  },
+  "testOutcome": {
+    "status": "passed",
+    "mochaExitCode": 0,
+    "durationMs": 9803,
+    "runAt": "2026-06-08T15:34:38.955Z"
+  },
+  "notes": "Fresh validator (--reset, fresh /tmp ledger) required per run due to non-idempotent test setup. WSL Ubuntu-24.04 validator reached from the node client over forwarded localhost. Clone fetch used NODE_TLS_REJECT_UNAUTHORIZED=0 to traverse a corporate TLS-intercepting proxy; only public on-chain account data was fetched."
+}

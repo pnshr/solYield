@@ -1,0 +1,92 @@
+{
+  "adapter": "kamino",
+  "displayName": "Kamino USDC",
+  "repoCommit": null,
+  "generatedAt": "2026-06-08T15:10:08.357Z",
+  "cluster": "mainnet-fork",
+  "rpcUrl": "https://solana-rpc.publicnode.com",
+  "baseSlot": 424939103,
+  "warpSlot": "424939103",
+  "localPrograms": [
+    {
+      "label": "dispatcher",
+      "programId": "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A",
+      "soPath": "target/deploy/dispatcher.so",
+      "soSha256": "f28611a10b5578befbb43744cbcaed259fe9e283be2978de61d9a7c7ea046dfd"
+    },
+    {
+      "label": "registry",
+      "programId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
+      "soPath": "target/deploy/registry.so",
+      "soSha256": "aa42479ea0a1dae7dcd84df7be71341ddec94fea31af6d8bc4ebda843be6a188"
+    },
+    {
+      "label": "kamino-usdc adapter",
+      "programId": "G4g2RMwZs2dH2sVe3ChQ4VpM2DNZu8EESdRyHTc3P9T4",
+      "soPath": "target/deploy/kamino_usdc.so",
+      "soSha256": "2a32bfbc756318f3da544eab254a2d82fc88db618273ff96b5316968f6253e10"
+    }
+  ],
+  "clonedAccounts": [
+    {
+      "label": "Kamino Lend program",
+      "address": "KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD",
+      "kind": "upgradeable-program",
+      "dataSha256": null
+    },
+    {
+      "label": "Kamino main lending market",
+      "address": "7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF",
+      "kind": "account",
+      "dataSha256": "2029245d4ff465cb4d721cc95c766903e58668be13b9c5440da9b5e7cf53381f"
+    },
+    {
+      "label": "Kamino main-market USDC reserve",
+      "address": "D6q6wuQSrifJKZYpR1M8R4YawnLDtDsMmWM1NbBmgJ59",
+      "kind": "account",
+      "dataSha256": "78f680fbf310da2217a88116da2bb7acec0640c8bfbbbccdcb5140df0ab272e9"
+    },
+    {
+      "label": "Kamino USDC reserve liquidity supply",
+      "address": "Bgq7trRgVMeq33yt235zM2onQ4bRDBsY5EWiTetF4qw6",
+      "kind": "account",
+      "dataSha256": "22ed756745b6270d91aba8c30a3c0749ddce2976f02a80509b3625b5de5e50b1"
+    },
+    {
+      "label": "Kamino USDC reserve collateral mint",
+      "address": "B8V6WVjPxW1UGwVDfxH2d2r8SyT4cqn7dQRK6XneVa7D",
+      "kind": "account",
+      "dataSha256": "ab27f6d6a206eec688dc83bea5540222922f2b4f9735553aa440436ae4499b34"
+    },
+    {
+      "label": "USDC mint",
+      "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "kind": "account",
+      "dataSha256": "ca186d483905b7bb0ea2391a58fd450a1917b350c64264326658299d7cc6151f"
+    }
+  ],
+  "fundedFixtures": [
+    {
+      "label": "funded user SOL account",
+      "address": "9B4MhXCsqr2SyQNRw4KoakcwriqN637GhpjxCnaafSmd",
+      "fixtureSha256": "707f7d9cc8e6b30f97eae9a26777261dbc9c1b672c252312736883431f425448"
+    },
+    {
+      "label": "funded USDC token account",
+      "address": "5JHYHnWR2Ngt43krW6zynw9RCcmYGCwcFzinpZnt1ijN",
+      "fixtureSha256": "4117147a0a2e3e27a37682b1c770bc716d5f524bd524bc131e81f3b812cb1c69"
+    }
+  ],
+  "commands": {
+    "clone": "npm run clone:mainnet -- kamino",
+    "validator": "bash .mainnet-fork-fixtures/start-kamino-validator.sh",
+    "test": "npm run test:fork:kamino"
+  },
+  "testOutcome": {
+    "status": "passed",
+    "mochaExitCode": 0,
+    "durationMs": 5575,
+    "runAt": "2026-06-08T15:10:08.366Z"
+  },
+  "notes": "Re-run 2026-06-08 after Phase 6 registry program-ID reconciliation to HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn. Rebuilt registry+dispatcher (new .so hashes); mocha exit 0, 1 passing (5575ms). Fresh validator (--reset, fresh /tmp ledger) required per run due to non-idempotent test setup. Direct reserve mint/redeem path; current_value does not refresh reserve/oracle and queued withdrawals are not covered. WSL Ubuntu-24.04 validator + Windows node client via localhost forwarding. Clone fetch used NODE_TLS_REJECT_UNAUTHORIZED=0 to traverse a corporate TLS-intercepting proxy; only public on-chain account data was fetched."
+}

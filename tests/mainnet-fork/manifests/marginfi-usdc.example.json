@@ -1,0 +1,57 @@
+{
+  "adapter": "marginfi",
+  "displayName": "MarginFi USDC",
+  "repoCommit": "<40-char git HEAD sha at generation time>",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "cluster": "mainnet-fork",
+  "rpcUrl": "https://solana-rpc.publicnode.com",
+  "baseSlot": 0,
+  "warpSlot": "0",
+  "localPrograms": [
+    {
+      "label": "dispatcher",
+      "programId": "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A",
+      "soPath": "target/deploy/dispatcher.so",
+      "soSha256": "<sha256 of the built .so>"
+    },
+    {
+      "label": "registry",
+      "programId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
+      "soPath": "target/deploy/registry.so",
+      "soSha256": "<sha256 of the built .so>"
+    },
+    {
+      "label": "marginfi-usdc adapter",
+      "programId": "ZZcKiv9h3ACNoXubmys1zWY9yFTjif6x6tb3Us4voyr",
+      "soPath": "target/deploy/marginfi_usdc.so",
+      "soSha256": "<sha256 of the built .so>"
+    }
+  ],
+  "clonedAccounts": [
+    {
+      "label": "MarginFi USDC bank",
+      "address": "2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB",
+      "kind": "account",
+      "dataSha256": "<sha256 of the cloned account data at baseSlot>"
+    }
+  ],
+  "fundedFixtures": [
+    {
+      "label": "funded USDC token account",
+      "address": "5JHYHnWR2Ngt43krW6zynw9RCcmYGCwcFzinpZnt1ijN",
+      "fixtureSha256": "<sha256 of the synthetic fixture json>"
+    }
+  ],
+  "commands": {
+    "clone": "npm run clone:mainnet -- marginfi",
+    "validator": "solana-test-validator --reset --ledger /tmp/marginfi-fork-ledger --url <RPC> --warp-slot <SLOT> ...",
+    "test": "npm run test:fork:marginfi"
+  },
+  "testOutcome": {
+    "status": "not-run",
+    "mochaExitCode": null,
+    "durationMs": null,
+    "runAt": null
+  },
+  "notes": "PLACEHOLDER SCHEMA ONLY — NOT A REAL RUN. Angle-bracket / zero values are placeholders. A real manifest is emitted by the fork harness from live clone state and the real mocha exit code. testOutcome.status is set to \"passed\" only when mocha actually exits 0."
+}

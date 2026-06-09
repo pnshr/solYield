@@ -1,0 +1,47 @@
+{
+  "name": "solana-yield-adapter-standard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reference implementation for a minimal Solana yield adapter standard.",
+  "scripts": {
+    "build": "anchor build",
+    "test": "anchor test",
+    "ts-test": "mocha -r ts-node/register \"tests/unit/**/*.ts\" \"tests/integration/**/*.ts\" --timeout 120000",
+    "test:unit": "mocha -r ts-node/register \"tests/unit/**/*.ts\" --timeout 120000",
+    "test:integration": "mocha -r ts-node/register \"tests/integration/**/*.ts\" --timeout 120000",
+    "test:fork": "ts-node scripts/run-mainnet-fork-tests.ts all",
+    "test:fork:kamino": "ts-node scripts/run-mainnet-fork-tests.ts kamino",
+    "test:fork:marginfi": "ts-node scripts/run-mainnet-fork-tests.ts marginfi",
+    "test:fork:jupiter": "ts-node scripts/run-mainnet-fork-tests.ts jupiter",
+    "test:fork:maple": "ts-node scripts/run-mainnet-fork-tests.ts maple",
+    "test:fork:drift": "ts-node scripts/run-mainnet-fork-tests.ts drift",
+    "typecheck": "tsc --noEmit",
+    "deploy:devnet": "ts-node scripts/deploy-devnet.ts",
+    "deploy:devnet:registry": "ts-node scripts/deploy-devnet.ts",
+    "deploy:devnet:plan": "ts-node scripts/deploy-devnet.ts --print-only",
+    "verify:devnet:registry": "ts-node scripts/verify-devnet-registry.ts",
+    "clone:mainnet": "ts-node scripts/clone-mainnet-accounts.ts",
+    "test:mainnet-fork": "npm run test:fork"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.31.1",
+    "@solana/web3.js": "^1.98.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@drift-labs/sdk": "^2.163.0-beta.13",
+    "@kamino-finance/klend-sdk": "^8.0.2",
+    "@mrgnlabs/marginfi-client-v2": "^6.4.2",
+    "@mrgnlabs/mrgn-common": "^2.0.7",
+    "@types/chai": "^4.3.20",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.2",
+    "chai": "^4.5.0",
+    "mocha": "^10.8.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "adapter": "maple",
+  "displayName": "Maple syrupUSDC",
+  "repoCommit": null,
+  "generatedAt": "2026-06-09T06:01:53.238Z",
+  "cluster": "mainnet-fork",
+  "rpcUrl": "https://solana-rpc.publicnode.com",
+  "baseSlot": 425276853,
+  "warpSlot": "425276853",
+  "localPrograms": [
+    {
+      "label": "dispatcher",
+      "programId": "FEKsMuAAp5Z6oxzsRkQLvHbMpvxJzVcV5JmGFD9KSC2A",
+      "soPath": "target/deploy/dispatcher.so",
+      "soSha256": "f28611a10b5578befbb43744cbcaed259fe9e283be2978de61d9a7c7ea046dfd"
+    },
+    {
+      "label": "registry",
+      "programId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
+      "soPath": "target/deploy/registry.so",
+      "soSha256": "aa42479ea0a1dae7dcd84df7be71341ddec94fea31af6d8bc4ebda843be6a188"
+    },
+    {
+      "label": "maple-syrup adapter",
+      "programId": "CnAVx7eyK1MZdkQVAWZMVE9B9aXFcxKmv8bS8dEpgvsC",
+      "soPath": "target/deploy/maple_syrup.so",
+      "soSha256": "e02d0fb735b3ca573726968b7fda6125762b0afcad471340ccebd4541c8a5db2"
+    }
+  ],
+  "clonedAccounts": [],
+  "fundedFixtures": [
+    {
+      "label": "funded user SOL account",
+      "address": "9B4MhXCsqr2SyQNRw4KoakcwriqN637GhpjxCnaafSmd",
+      "fixtureSha256": "707f7d9cc8e6b30f97eae9a26777261dbc9c1b672c252312736883431f425448"
+    }
+  ],
+  "commands": {
+    "clone": "npm run clone:mainnet -- maple",
+    "validator": "bash .mainnet-fork-fixtures/start-maple-validator.sh",
+    "test": "npm run test:fork:maple"
+  },
+  "testOutcome": {
+    "status": "passed",
+    "mochaExitCode": 0,
+    "durationMs": 7649,
+    "runAt": "2026-06-09T06:01:53.242Z"
+  },
+  "notes": ""
+}
