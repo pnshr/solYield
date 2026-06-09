@@ -246,28 +246,3 @@ Short version:
 - Mainnet-fork reliability depends on RPC account cloning support and rate
   limits.
 
-## Bounty Submission Checklist
-
-This checklist tracks current repository assets. It is not a final readiness
-claim until all unchecked P0 gates pass.
-
-- [x] Minimal standard surface documented.
-- [x] Registry and dispatcher implemented.
-- [x] Adapter template and compliance tests included.
-- [x] MarginFi USDC real path implemented without fake protocol state.
-- [x] Kamino USDC direct reserve path implemented without fake reserve state.
-- [x] Jupiter Perps JLP v2 path implemented without fake pool state.
-- [x] Drift Insurance Fund request-remove path implemented without fake final
-      settlement.
-- [x] Maple syrupUSDC is implemented as an honest asset-position adapter and
-      does not fake CCIP mint/redeem.
-- [x] Mainnet-fork clone/test commands documented.
-- [x] SDK helpers and examples included.
-- [x] Devnet registry deployment script included.
-- [x] All unresolved placeholders use searchable `TODO_INTEGRATION:` markers and
-      are tracked in `docs/INTEGRATION_NOTES.md`.
-- [ ] Jupiter mainnet-fork test passes end-to-end (currently blocked: `StaleOraclePrice(6003)`, fork-clock/oracle-freshness — failing manifest committed with root-cause).
-- [x] Drift mainnet-fork test passes end-to-end (historical-binary fork: official v2.161.0 built from source + real mainnet state; methodology in `docs/MAINNET_FORK_TEST_RESULTS.md`).
-- [x] All five adapter fork test results are recorded and reproducible (`tests/mainnet-fork/manifests/`).
-- [x] Registry is deployed to devnet (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`) and deployment proof committed (`deployments/devnet/registry.json`).
-- [ ] Public GitHub repository is clean and published.
