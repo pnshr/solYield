@@ -1,12 +1,12 @@
 {
   "adapter": "marginfi",
   "displayName": "MarginFi USDC",
-  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
-  "generatedAt": "2026-06-08T15:34:38.948Z",
+  "repoCommit": "dcdf024c771c8491d944b741e5f6c50803a89363",
+  "generatedAt": "2026-06-09T19:45:49.374Z",
   "cluster": "mainnet-fork",
-  "rpcUrl": "https://solana-rpc.publicnode.com",
-  "baseSlot": 424920882,
-  "warpSlot": "424920882",
+  "rpcUrl": "https://mainnet.helius-rpc.com",
+  "baseSlot": 425402957,
+  "warpSlot": "425402957",
   "localPrograms": [
     {
       "label": "dispatcher",
@@ -44,25 +44,25 @@
       "label": "MarginFi USDC bank",
       "address": "2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB",
       "kind": "account",
-      "dataSha256": "29d7eb1bef26236c104552e7112bde608dbd5540a9517fdd897dcf90fdefbc3d"
+      "dataSha256": "ddab7f972be7b829a87b90eb5ce9e19171489b24fadad8eba87d1fc333c9f92a"
     },
     {
       "label": "MarginFi USDC liquidity vault",
       "address": "7jaiZR5Sk8hdYN9MxTpczTcwbWpb5WEoxSANuUwveuat",
       "kind": "account",
-      "dataSha256": "9e755e6573754cd83073fb17123576ee7fbf4fe841bb60364a7e96d9dcd9422d"
+      "dataSha256": "fdae3775538faf8dd2b16b8e896bb890ddfba4f9178c00a69e5ea3dcf8ff2ccf"
     },
     {
       "label": "MarginFi USDC oracle",
       "address": "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
       "kind": "account",
-      "dataSha256": "cb7864f1280084ef41159cedce43840be4b20ff6f9ce9b8ac7c236c4b137963c"
+      "dataSha256": "7b7451622faa5c79f9660aed3031c8088f5672684612bcefd7b5fa97561cb4b8"
     },
     {
       "label": "USDC mint",
       "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "kind": "account",
-      "dataSha256": "ca186d483905b7bb0ea2391a58fd450a1917b350c64264326658299d7cc6151f"
+      "dataSha256": "068377510baf1eef97d9572910b7f827102c725b4642e8abb3697fa51d32fa33"
     }
   ],
   "fundedFixtures": [
@@ -85,8 +85,8 @@
   "testOutcome": {
     "status": "passed",
     "mochaExitCode": 0,
-    "durationMs": 9803,
-    "runAt": "2026-06-08T15:34:38.955Z"
+    "durationMs": 9659,
+    "runAt": "2026-06-09T19:45:49.382Z"
   },
   "notes": "Fresh validator (--reset, fresh /tmp ledger) required per run due to non-idempotent test setup. WSL Ubuntu-24.04 validator reached from the node client over forwarded localhost. Clone fetch used NODE_TLS_REJECT_UNAUTHORIZED=0 to traverse a corporate TLS-intercepting proxy; only public on-chain account data was fetched."
 }

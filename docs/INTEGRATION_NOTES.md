@@ -224,38 +224,43 @@ Verified data:
 - Value math: `if_shares * insurance_fund_vault_amount / total_if_shares`, with
   pending request fields included.
 
+Mainnet wind-down (verified on-chain 2026-06-09):
+
+- The Drift program deployed on mainnet (last deploy slot 410,633,860) removed
+  every user-facing instruction: `initialize_user_stats`, `initialize_user`,
+  `deposit`, `withdraw`, `place_perp_order`, and the entire insurance-fund
+  staking set all return `InstructionFallbackNotFound (101)` when simulated
+  against live mainnet with their canonical sha256 discriminators. Admin
+  instructions still dispatch (e.g. `admin_withdraw_from_insurance_fund_vault`,
+  which drained the USDC IF vault at slot 410,454,545), proving the deployed
+  binary uses standard Anchor dispatch and the discriminators were never the
+  problem. An earlier note here speculated about discriminator/IDL drift;
+  that hypothesis is closed — the instructions are gone from the binary.
+- The fork test therefore loads the official protocol-v2 `v2.161.0` binary
+  built from source (`scripts/build-drift-v2161.sh`, sha256 pinned in the run
+  manifest) at the Drift program id, with unmodified freshly cloned mainnet
+  account state. With that binary the full dispatcher → registry → adapter →
+  Drift CPI path passes (`drift-insurance-fund.json`, `passed`).
+- Empirically verified `SpotMarket` layout (against cloned mainnet account
+  bytes, account size 776): `insurance_fund.vault` at byte offset 304,
+  `insurance_fund.total_shares` (u128) at 336. The adapter's original offsets
+  (168/200) pointed into `historical_oracle_data` and were fixed once the CPI
+  path became exercisable.
+
 Known limitations:
 
 - Standard `withdraw` requests removal. A future extension instruction should
   complete matured removal after Drift permits settlement.
-- Static discriminator cross-check (verified by reading
-  `@drift-labs/sdk@2.163.0-beta.13/lib/node/idl/drift.json`): the adapter's
-  hardcoded CPI discriminators match the SDK IDL exactly —
-  `add_insurance_fund_stake = [251,144,115,11,222,47,62,236]`,
-  `request_remove_insurance_fund_stake = [142,70,204,92,73,106,180,52]`. The
-  setup instructions the fork harness calls also carry standard Anchor
-  discriminators in that IDL —
-  `initialize_user_stats = [254,243,72,98,251,130,168,213]`,
-  `initialize_insurance_fund_stake = [187,179,243,70,248,90,92,147]`. Every one
-  is the standard `sha256("global:<snake_name>")[:8]`, so the
-  `camelizeDriftIdl` recompute in `tests/support/drift-insurance-fund-flow.ts`
-  produces identical bytes. The adapter CPI layer is therefore byte-correct
-  against the pinned SDK IDL; no bytes are guessed.
-- Remaining blocker is empirical, not a code defect in the adapter: the previous
-  `InstructionFallbackNotFound` observation must be re-confirmed against the
-  live cloned mainnet program, since the bytes above should match a
-  standard Anchor-built deployment. The two candidate causes still to verify on
-  a running validator are (a) deployed-program-vs-SDK version drift on one
-  specific setup instruction, or (b) the new-format-IDL loading / camelization
-  path in the harness. The robust fix, to be applied and verified once a
-  validator is available, is to load the deployed program's on-chain IDL (with
-  the bundled SDK IDL as fallback) so discriminators always track the actual
-  deployed bytes.
+- Adapter CPI discriminators match `@drift-labs/sdk@2.163.0-beta.13` IDL and
+  are the standard `sha256("global:<snake_name>")[:8]` bytes; the test harness
+  keeps IDL-embedded discriminators and only recomputes when absent.
 - Fork tests initialize user stats and insurance fund stake before dispatcher
   deposit. That setup is not a yield operation and does not bypass dispatcher
   routing.
-- The Rust path still needs to be compiled and executed in an environment with
-  Anchor/Solana CLIs installed.
+- Insurance-fund staking no longer exists in the deployed mainnet binary, so
+  this adapter cannot be exercised against current mainnet — by any
+  implementation. The historical-binary fork is the honest closest
+  approximation and is labelled as such in the manifest.
 
 Notes:
 

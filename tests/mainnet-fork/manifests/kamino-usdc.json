@@ -1,12 +1,12 @@
 {
   "adapter": "kamino",
   "displayName": "Kamino USDC",
-  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
-  "generatedAt": "2026-06-08T15:10:08.357Z",
+  "repoCommit": "dcdf024c771c8491d944b741e5f6c50803a89363",
+  "generatedAt": "2026-06-09T19:45:23.395Z",
   "cluster": "mainnet-fork",
-  "rpcUrl": "https://solana-rpc.publicnode.com",
-  "baseSlot": 424939103,
-  "warpSlot": "424939103",
+  "rpcUrl": "https://mainnet.helius-rpc.com",
+  "baseSlot": 425402890,
+  "warpSlot": "425402890",
   "localPrograms": [
     {
       "label": "dispatcher",
@@ -44,25 +44,25 @@
       "label": "Kamino main-market USDC reserve",
       "address": "D6q6wuQSrifJKZYpR1M8R4YawnLDtDsMmWM1NbBmgJ59",
       "kind": "account",
-      "dataSha256": "78f680fbf310da2217a88116da2bb7acec0640c8bfbbbccdcb5140df0ab272e9"
+      "dataSha256": "2d1744f439fc35bf30a8497f4c5643807f07c2a6d75c6e18140c2391fad92a20"
     },
     {
       "label": "Kamino USDC reserve liquidity supply",
       "address": "Bgq7trRgVMeq33yt235zM2onQ4bRDBsY5EWiTetF4qw6",
       "kind": "account",
-      "dataSha256": "22ed756745b6270d91aba8c30a3c0749ddce2976f02a80509b3625b5de5e50b1"
+      "dataSha256": "6e10ebbd3298d2de18ea5d49600227154ae299b5c959da7f96a281272c1f2ccc"
     },
     {
       "label": "Kamino USDC reserve collateral mint",
       "address": "B8V6WVjPxW1UGwVDfxH2d2r8SyT4cqn7dQRK6XneVa7D",
       "kind": "account",
-      "dataSha256": "ab27f6d6a206eec688dc83bea5540222922f2b4f9735553aa440436ae4499b34"
+      "dataSha256": "0a6b76f8a4b26f327e19ed0468422d5881f167de6ba79d0d0872d9737c179d63"
     },
     {
       "label": "USDC mint",
       "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "kind": "account",
-      "dataSha256": "ca186d483905b7bb0ea2391a58fd450a1917b350c64264326658299d7cc6151f"
+      "dataSha256": "72f70993980c63d3625a5340ae9216fcaf1f6c12e0c4554636695d68feeb1825"
     }
   ],
   "fundedFixtures": [
@@ -85,8 +85,8 @@
   "testOutcome": {
     "status": "passed",
     "mochaExitCode": 0,
-    "durationMs": 5575,
-    "runAt": "2026-06-08T15:10:08.366Z"
+    "durationMs": 8116,
+    "runAt": "2026-06-09T19:45:23.402Z"
   },
-  "notes": "Re-run 2026-06-08 after Phase 6 registry program-ID reconciliation to HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn. Rebuilt registry+dispatcher (new .so hashes); mocha exit 0, 1 passing (5575ms). Fresh validator (--reset, fresh /tmp ledger) required per run due to non-idempotent test setup. Direct reserve mint/redeem path; current_value does not refresh reserve/oracle and queued withdrawals are not covered. WSL Ubuntu-24.04 validator + Windows node client via localhost forwarding. Clone fetch used NODE_TLS_REJECT_UNAUTHORIZED=0 to traverse a corporate TLS-intercepting proxy; only public on-chain account data was fetched."
+  "notes": "Fresh validator (--reset, fresh /tmp ledger) required per run due to non-idempotent test setup. Direct reserve mint/redeem path; current_value does not refresh reserve/oracle and queued withdrawals are not covered. WSL Ubuntu-24.04 validator reached from the node client over forwarded localhost. Clone fetch used NODE_TLS_REJECT_UNAUTHORIZED=0 to traverse a corporate TLS-intercepting proxy; only public on-chain account data was fetched."
 }

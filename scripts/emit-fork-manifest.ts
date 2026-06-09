@@ -197,6 +197,8 @@ const configs: Record<AdapterId, AdapterManifestConfig> = {
   drift: {
     displayName: "Drift Insurance Fund",
     manifestFile: "drift-insurance-fund.json",
+    defaultNotes:
+      "HISTORICAL-BINARY FORK: the Drift program loaded into the fork is the official open-source protocol-v2 v2.161.0 binary built from source (scripts/build-drift-v2161.sh), NOT the currently deployed mainnet binary. Reason: the mainnet deployment at slot 410633860 removed every user-facing instruction (deposit/withdraw/initialize_user/all insurance-fund staking return InstructionFallbackNotFound when simulated against live mainnet; only admin instructions dispatch), and the admin drained the USDC insurance-fund vault at slot 410454545. Insurance-fund staking therefore no longer exists on mainnet and cannot pass against the deployed binary for any implementation. All cloned ACCOUNT state (Drift state, USDC spot market, vaults, oracle) is real current mainnet state. Fresh validator per run; WSL validator + node client over forwarded localhost.",
     localPrograms: [
       dispatcher,
       registry,
@@ -205,8 +207,46 @@ const configs: Record<AdapterId, AdapterManifestConfig> = {
         programId: "mWDRjDXGpQupue6j74cdWJD7BJ1XygdaxU7vc52BLve",
         soPath: "target/deploy/drift_insurance_fund.so",
       },
+      {
+        label:
+          "drift program (official protocol-v2 v2.161.0 built from source; scripts/build-drift-v2161.sh)",
+        programId: "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH",
+        soPath: `${FIX}/drift-v2.161.0.so`,
+      },
     ],
-    clonedAccounts: [],
+    clonedAccounts: [
+      {
+        label: "Drift state",
+        address: "5zpq7DvB6UdFFvpmBPspGPNfUGoBRRCE2HHg5u3gxcsN",
+        kind: "account",
+        fixturePath: `${ACCT}/drift-state-5zpq7DvB6UdFFvpmBPspGPNfUGoBRRCE2HHg5u3gxcsN.json`,
+      },
+      {
+        label: "Drift USDC spot market",
+        address: "6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3",
+        kind: "account",
+        fixturePath: `${ACCT}/drift-usdc-spot-market-6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3.json`,
+      },
+      {
+        label: "Drift USDC spot market vault",
+        address: "GXWqPpjQpdz7KZw9p7f5PX2eGxHAhvpNXiviFkAB8zXg",
+        kind: "account",
+        fixturePath: `${ACCT}/drift-usdc-spot-market-vault-GXWqPpjQpdz7KZw9p7f5PX2eGxHAhvpNXiviFkAB8zXg.json`,
+      },
+      {
+        label: "Drift USDC insurance fund vault",
+        address: "2CqkQvYxp9Mq4PqLvAQ1eryYxebUh4Liyn5YMDtXsYci",
+        kind: "account",
+        fixturePath: `${ACCT}/drift-usdc-insurance-fund-vault-2CqkQvYxp9Mq4PqLvAQ1eryYxebUh4Liyn5YMDtXsYci.json`,
+      },
+      {
+        label: "Drift USDC oracle",
+        address: "9VCioxmni2gDLv11qufWzT3RDERhQE4iY5Gf7NTfYyAV",
+        kind: "account",
+        fixturePath: `${ACCT}/drift-usdc-oracle-9VCioxmni2gDLv11qufWzT3RDERhQE4iY5Gf7NTfYyAV.json`,
+      },
+      usdcMintFixture,
+    ],
     fundedFixtures: [fundedSol, fundedUsdc],
   },
 };

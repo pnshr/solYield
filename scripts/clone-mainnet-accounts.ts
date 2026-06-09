@@ -1044,6 +1044,19 @@ function localProgramsFor(selectedIds: AdapterId[]): LocalProgram[] {
   ];
 }
 
+// The current mainnet Drift deployment (last deploy slot 410633860) removed
+// every user-facing instruction (deposit/withdraw/initialize_user/all
+// insurance-fund staking return InstructionFallbackNotFound on live mainnet),
+// so insurance-fund staking can no longer be exercised against the deployed
+// binary. Set DRIFT_LOCAL_SO to a drift.so built from the official
+// protocol-v2 v2.161.0 sources (see scripts/build-drift-v2161.sh) to load the
+// last released binary that still contains the insurance-fund instruction
+// set; cloned account state remains real current mainnet state.
+function driftLocalSoOverride(): string | null {
+  const path = process.env.DRIFT_LOCAL_SO ?? "";
+  return path.trim() === "" ? null : path.trim();
+}
+
 function localProgramArgs(program: LocalProgram): string[] {
   return ["--bpf-program", program.programId.toBase58(), program.soPath];
 }
@@ -1090,10 +1103,24 @@ async function main(): Promise<void> {
     process.env.FORK_ACCOUNT_SOURCE === "fixture";
   const warpSlot =
     process.env.FORK_WARP_SLOT ?? (await defaultWarpSlot(rpcUrl, prefetchAccounts));
-  const accounts = dedupeCloneAccounts(
+  let accounts = dedupeCloneAccounts(
     selectedPlans.flatMap((plan) => plan.cloneAccounts),
   );
   const localPrograms = localProgramsFor(selectedIds);
+  const driftLocalSo = selectedIds.includes("drift")
+    ? driftLocalSoOverride()
+    : null;
+  if (driftLocalSo !== null) {
+    accounts = accounts.filter(
+      (account) => !account.address.equals(DRIFT_PROGRAM_ID),
+    );
+    localPrograms.push({
+      label:
+        "drift program (official protocol-v2 v2.161.0 built from source; see scripts/build-drift-v2161.sh)",
+      programId: DRIFT_PROGRAM_ID,
+      soPath: driftLocalSo,
+    });
+  }
   const prefetchedAccountFixtures = prefetchAccounts
     ? await writeClonedAccountFixtures(accounts, rpcUrl)
     : [];

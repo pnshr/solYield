@@ -15,13 +15,15 @@ direct reserve, Jupiter Perps JLP, Maple syrupUSDC asset-position, and Drift
 Insurance Fund request-remove paths, SDK helpers, examples, and mainnet-fork
 tooling.
 
-Current bounty readiness: not submission-ready. The baseline audit score was
-`58 / 100`; the target is `95+`. Jupiter and Drift fork paths remain P0
-blockers (oracle-freshness and discriminator-mismatch respectively — both
-precisely characterised in committed failing manifests). The Maple adapter is
-honest syrupUSDC custody rather than a real protocol integration. The public
-GitHub repo must be published before final submission. Registry is deployed to
-devnet (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`). All five fork-test
+Current status: four of five adapter mainnet-fork tests pass end-to-end
+through dispatcher → registry → adapter → protocol (Kamino, MarginFi, Maple,
+Drift — see `docs/MAINNET_FORK_TEST_RESULTS.md`; the Drift run uses the
+official protocol-v2 v2.161.0 binary built from source because the deployed
+mainnet binary removed all user-facing instructions at slot 410,633,860).
+Jupiter remains blocked on fork-clock/oracle-freshness, with the real failing
+manifest committed. The Maple adapter is honest syrupUSDC custody rather than
+a full protocol integration. Registry is deployed to devnet
+(`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`). All five fork-test
 manifests are committed. See `docs/BOUNTY_100_POINT_PLAN.md` for the
 authoritative execution plan.
 
@@ -175,7 +177,7 @@ Flags:
 | Kamino USDC | Real direct reserve path | Reserve deposit/redeem CPI and collateral value math implemented; refreshReserve and queued-withdrawal extensions are documented limitations. |
 | Jupiter LP | Blocked fork path | USDC add/remove-liquidity CPI, JLP share accounting, and AUM/supply value math implemented; fork deposit still fails Jupiter Perps oracle freshness. Doves replay is blocked by keeper signer validation. |
 | Maple syrupUSDC | Real asset-position path | Custodies user-owned syrupUSDC in a PDA vault and returns native syrupUSDC value; CCIP mint/redeem is a documented future extension. |
-| Drift Insurance Fund | Blocked fork path | Request-remove adapter path implemented; fork setup currently needs exact deployed Drift IDL/discriminator alignment before the CPI can be claimed passing. |
+| Drift Insurance Fund | Real path, passing fork test | `add_insurance_fund_stake` / `request_remove` CPI passes against the official protocol-v2 v2.161.0 binary built from source plus real mainnet state. The deployed mainnet binary removed all user-facing instructions (wind-down, slot 410,633,860), so current-binary execution is impossible for any implementation — fully documented in `docs/MAINNET_FORK_TEST_RESULTS.md`. |
 
 ## TypeScript SDK
 
@@ -236,9 +238,11 @@ Short version:
   and queued withdrawals are not implemented.
 - Drift final settlement after the unstaking period is intentionally left as a
   documented future extension; the standard `withdraw` call requests removal.
-- Drift fork setup currently fails before dispatcher deposit because the pinned
-  SDK IDL and deployed Drift instruction namespace/discriminators need exact
-  alignment.
+- Drift insurance-fund staking no longer exists in the deployed mainnet binary
+  (wind-down deploy at slot 410,633,860 removed all user-facing instructions).
+  The fork test loads the official protocol-v2 v2.161.0 binary built from
+  source (`scripts/build-drift-v2161.sh`) over real cloned mainnet state, and
+  is labelled as a historical-binary fork in its manifest.
 - Mainnet-fork reliability depends on RPC account cloning support and rate
   limits.
 
@@ -262,8 +266,8 @@ claim until all unchecked P0 gates pass.
 - [x] Devnet registry deployment script included.
 - [x] All unresolved placeholders use searchable `TODO_INTEGRATION:` markers and
       are tracked in `docs/INTEGRATION_NOTES.md`.
-- [ ] Jupiter mainnet-fork test passes end-to-end (currently blocked: `StaleOraclePrice(6003)`, oracle-freshness — failing manifest committed with root-cause).
-- [ ] Drift mainnet-fork test passes end-to-end (currently blocked: discriminator mismatch — failing manifest committed with root-cause).
+- [ ] Jupiter mainnet-fork test passes end-to-end (currently blocked: `StaleOraclePrice(6003)`, fork-clock/oracle-freshness — failing manifest committed with root-cause).
+- [x] Drift mainnet-fork test passes end-to-end (historical-binary fork: official v2.161.0 built from source + real mainnet state; methodology in `docs/MAINNET_FORK_TEST_RESULTS.md`).
 - [x] All five adapter fork test results are recorded and reproducible (`tests/mainnet-fork/manifests/`).
 - [x] Registry is deployed to devnet (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`) and deployment proof committed (`deployments/devnet/registry.json`).
 - [ ] Public GitHub repository is clean and published.

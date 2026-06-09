@@ -6,132 +6,142 @@ manifests in [`tests/mainnet-fork/manifests/`](../tests/mainnet-fork/manifests/)
 
 > Honesty policy: a row is only marked **PASS (verified)** when the fork test has
 > actually exited `0` and a run manifest with `testOutcome.status: "passed"` is
-> committed. "Author-reported" means the path was reported passing in earlier
-> development but has **not** been independently re-run and manifested in the
-> current environment yet. Blocked adapters keep their real CPI path and record
-> the precise blocker — failing tests are never deleted or relabelled.
+> committed. Blocked adapters keep their real CPI path and record the precise
+> blocker — failing tests are never deleted or relabelled. When an earlier
+> root-cause analysis turns out to be wrong, it is corrected here, not erased.
 
-## Status summary
+## Status summary (re-verified 2026-06-09, dedicated RPC, fresh clones)
 
-| Adapter | CPI path implemented | Fork status | Run manifest | Blocker / note |
+| Adapter | CPI path | Fork status | Run manifest | Note |
 | --- | --- | --- | --- | --- |
-| MarginFi USDC | Yes — `lending_account_deposit` / `lending_account_withdraw` | **PASS (verified)** — re-run 2026-06-08, mocha exit 0, `1 passing` | `marginfi-usdc.json` | Fresh validator per run (non-idempotent setup). |
-| Kamino USDC | Yes — `depositReserveLiquidity` / `redeemReserveCollateral` | **PASS (verified)** — re-run 2026-06-08, mocha exit 0, `1 passing` | `kamino-usdc.json` | Fresh validator per run (non-idempotent setup). |
-| Maple syrupUSDC | Yes — SPL custody of syrupUSDC in PDA vault | **PASS (verified)** — re-run 2026-06-09, mocha exit 0, `1 passing` | `maple-syrup.json` | Values in native syrupUSDC units, not USDC. Not CCIP mint/redeem. Fresh validator per run (non-idempotent setup). |
-| Jupiter LP | Yes — `addLiquidity2` / `removeLiquidity2` | **Blocked** | `jupiter-lp.json` (failed) | `StaleOraclePrice (6003)` at `oracle.rs:265`: `require_gte!(oracle.last_update_time=5, current_unix_time−max_age=66653)` — cloned Doves/Edge oracle accounts have publish_time≈epoch-zero; keeper replay fails `InvalidSigner(6006)`. |
-| Drift Insurance Fund | Yes — `add_insurance_fund_stake` / `request_remove_insurance_fund_stake` | **Blocked — wrong discriminators** | `drift-insurance-fund.json` (failed) | `sha256("global:<name>")[:8]` discriminators are rejected by the deployed binary with `InstructionFallbackNotFound` (Custom 101) — reproduced on both the fork validator and real mainnet (confirmed 2026-06-09). The binary contains no sha256 discriminator bytes in any section. Correct discriminators unknown; root cause in manifest notes. |
+| Kamino USDC | `depositReserveLiquidity` / `redeemReserveCollateral` | **PASS (verified)** — mocha exit 0, `1 passing` | `kamino-usdc.json` | Current mainnet program + state, cloned at warp slot. |
+| MarginFi USDC | `lending_account_deposit` / `lending_account_withdraw` | **PASS (verified)** — mocha exit 0, `1 passing` | `marginfi-usdc.json` | Current mainnet program + state. |
+| Maple syrupUSDC | SPL custody of syrupUSDC in PDA vault | **PASS (verified)** — mocha exit 0, `1 passing` | `maple-syrup.json` | Values in native syrupUSDC units. Not CCIP mint/redeem. |
+| Drift Insurance Fund | `add_insurance_fund_stake` / `request_remove_insurance_fund_stake` | **PASS (verified)** — mocha exit 0, `1 passing` | `drift-insurance-fund.json` | **Historical-binary fork** (see below): official protocol-v2 v2.161.0 binary built from source + real current mainnet account state. |
+| Jupiter LP | `addLiquidity2` / `removeLiquidity2` | **Blocked** | `jupiter-lp.json` (failed) | `StaleOraclePrice (6003)`: fork-validator clock vs Doves/Edge oracle timestamps; under investigation (see Jupiter section). |
 
-Discriminators and account layouts for every adapter are verified from primary
-protocol sources / pinned SDK IDLs (see `docs/INTEGRATION_NOTES.md`). Jupiter's
-block is a **runtime oracle-freshness blocker**: the Jupiter Perpetuals program
-(`PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu`) throws `StaleOraclePrice (6003)` because
-cloned Doves/Edge oracle price accounts are static snapshots whose `publish_time` is
-effectively Unix-epoch-zero in the fork environment, and the keeper needed to post
-fresh prices signs with an unavailable private key (`InvalidSigner(6006)`).
-Drift's block is a **discriminator mismatch**: the `sha256("global:<name>")[:8]`
-values used by the test and the adapter do not match what the deployed mainnet
-Drift binary actually accepts; the correct values are unknown without a real
-funded mainnet Drift call.
+All passing runs go through the full path: **dispatcher → registry
+(approve/pause/reject checks) → adapter → real protocol program**, and assert
+real token movements plus rejection of pending/paused entries and wrong mints.
+
+## Drift: why the fork loads a historical binary (full disclosure)
+
+**The currently deployed mainnet Drift program no longer contains
+insurance-fund staking — or any user-facing instruction.** Verified directly
+against live mainnet on 2026-06-09 by simulating instructions with their
+canonical Anchor discriminators (`sha256("global:<name>")[:8]`):
+
+| Probe (live mainnet simulation) | Result |
+| --- | --- |
+| `admin_withdraw_from_insurance_fund_vault` | dispatches (fails later for missing args — instruction exists) |
+| `initialize_user_stats`, `initialize_user`, `deposit`, `withdraw`, `place_perp_order` | `InstructionFallbackNotFound (101)` — **removed** |
+| `initialize_insurance_fund_stake`, `add_insurance_fund_stake`, `request_remove_insurance_fund_stake`, `remove_insurance_fund_stake` | `InstructionFallbackNotFound (101)` — **removed** |
+
+Supporting on-chain facts:
+
+- Last program deploy: slot **410,633,860** (`ProgramData
+  7dLgmtcTavcguNoynVimF9ZNVb13FvhXVRfj2HyrDGaP`).
+- The admin drained the USDC insurance-fund vault
+  (`2CqkQvYxp9Mq4PqLvAQ1eryYxebUh4Liyn5YMDtXsYci`) via
+  `AdminWithdrawFromInsuranceFundVault` at slot **410,454,545**; the vault now
+  holds 0.00486 USDC.
+- Third-party integrations that still reference Drift accounts report the
+  Drift USDC oracle as stale by ~15M slots (the entire post-wind-down period).
+
+**Correction of the earlier analysis.** A previous revision of this document
+claimed the blocker was "wrong discriminators — correct values unknown". That
+was a misdiagnosis: the sha256 discriminators used by the adapter and the SDK
+IDL are correct (the still-dispatching admin instruction proves the deployed
+binary uses standard Anchor dispatch). The instructions themselves were
+removed from the deployed binary. No discriminator change could ever have
+fixed this.
+
+**Methodology.** Because the feature no longer exists in the deployed binary,
+the fork loads the **last released open-source Drift binary** — protocol-v2
+tag `v2.161.0` (2026-03-30), built from official sources with
+[`scripts/build-drift-v2161.sh`](../scripts/build-drift-v2161.sh) — at the
+Drift program id, on top of **unmodified, freshly cloned current mainnet
+account state** (Drift state, USDC spot market, vaults, oracle). The run
+manifest pins the sha256 of the built binary. This is clearly labelled in the
+manifest `notes`; no account state is fabricated or edited.
+
+Two real adapter bugs were found and fixed once the CPI path became
+exercisable (commit `dcdf024`): the `SpotMarket` insurance-fund field offsets
+were wrong (`insurance_fund.vault` is at byte 304, `insurance_fund.total_shares`
+at byte 336 of the account; verified against cloned mainnet account bytes).
+
+## Jupiter: current blocker
+
+`StaleOraclePrice (6003)` at `perpetuals/src/state/oracle.rs:265`. Latest
+re-run (fresh consistent clone, warp slot = clone slot) shows
+`require_gte!(oracle.last_update_time = 5, current_unix_time − max_age = 91158)`
+— both sides are near Unix epoch zero, which means the fork validator's bank
+clock does not track the warp slot. This narrows the blocker from "keeper
+signatures cannot be replayed" to **fork-clock calibration**, which is still
+under investigation. The committed manifest records the real failing run.
 
 ## Reproducible run procedure
 
-The fork harness is fully scripted. Each run is: **clone mainnet state → start a
-local validator preloaded with that state + the locally built programs → run the
-adapter's mocha fork test against the validator.**
-
-### 1. Clone mainnet account fixtures
+The harness reads configuration from `.env` (see `.env.example`). Each run is:
+**clone mainnet state → start a local validator preloaded with that state and
+the locally built programs → run the adapter's mocha fork test against it.**
 
 ```sh
-MAINNET_RPC_URL=<RPC_URL> \
-FORK_PREFETCH_ACCOUNTS=1 \
-FORK_USER_PUBKEY=<ANCHOR_WALLET_PUBKEY> \
-npm run clone:mainnet -- marginfi
+# 0. Build programs
+anchor build
+
+# 1. Configure .env for the clone step
+#    MAINNET_RPC_URL=<dedicated RPC; public endpoints rate-limit clones>
+#    FORK_PREFETCH_ACCOUNTS=1
+#    FORK_USER_PUBKEY=<pubkey of ANCHOR_WALLET>
+#    For Drift only: build the historical binary first, then set
+#    DRIFT_LOCAL_SO=.mainnet-fork-fixtures/drift-v2.161.0.so
+bash scripts/build-drift-v2161.sh        # Drift only, once
+
+# 2. Clone state + generate the validator command
+npm run clone:mainnet -- <kamino|marginfi|maple|drift|jupiter>
+#    Writes fixtures under .mainnet-fork-fixtures/ and prints the exact
+#    solana-test-validator command. Run it (keep --reset, fresh ledger).
+
+# 3. Reconfigure .env for the test step and run
+#    ANCHOR_PROVIDER_URL=http://127.0.0.1:8899
+#    ANCHOR_WALLET=<local keypair>
+#    FORK_USER_PUBKEY=<same pubkey>
+#    FORK_WARP_SLOT=<warpSlot printed by the clone step>
+#    FORK_EMIT_MANIFEST=1
+npm run test:fork:<adapter>
 ```
 
-This writes real mainnet account fixtures under `.mainnet-fork-fixtures/` and
-prints the exact `solana-test-validator` command (with `--bpf-program` for the
-locally built dispatcher/registry/adapter and `--account` for every fixture).
+`run-mainnet-fork-tests.ts` runs each adapter in its own mocha process and
+emits that adapter's run manifest from the **real** mocha exit code and
+measured duration. The clone slot and warp slot come from the same snapshot,
+which matters: protocol freshness checks (Kamino reserve `last_update`,
+oracles) fail if fixtures and warp slot are taken at different times.
 
-### 2. Start the validator
+## Environment notes (honesty caveats)
 
-Run the printed `solana-test-validator` command. Use `--reset` and a fresh
-ledger. (`anchor build` must have produced `target/deploy/*.so` first.)
-
-### 3. Run the fork test
-
-```sh
-ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 \
-ANCHOR_WALLET=<LOCAL_KEYPAIR> \
-FORK_USER_PUBKEY=<ANCHOR_WALLET_PUBKEY> \
-npm run test:fork:marginfi
-```
-
-`run-mainnet-fork-tests.ts` sets `RUN_<ADAPTER>_MAINNET_FORK=1` itself and spawns
-mocha; it does not start the validator. It now runs each selected adapter in its
-own mocha process and, after each run, automatically emits that adapter's run
-manifest from the **real** mocha exit code and measured duration (see
-[Run manifests](#run-manifests)). Set `FORK_EMIT_MANIFEST=0` to skip emission.
-
-## Environment notes for this machine (honesty caveats)
-
-The current development machine has two real constraints that affect *where* and
-*how* fork runs execute. They do **not** involve faking any data:
-
-- **Corporate TLS-intercepting proxy.** HTTPS is intercepted with an untrusted
-  root CA, so Node `fetch` fails cert validation and `api.mainnet-beta.solana.com`
-  is rate-limited to empty bodies. The clone step uses
-  `MAINNET_RPC_URL=https://solana-rpc.publicnode.com` (returns real JSON) and, for
-  the clone fetch only, `NODE_TLS_REJECT_UNAUTHORIZED=0`. This only affects TLS
-  trust for fetching **public on-chain account data** — the fixtures written are
-  still real mainnet state.
-- **WSL/Windows split.** The Linux `solana-test-validator` runs in WSL with a
-  WSL-native ledger (`/tmp/<adapter>-fork-ledger`); the TypeScript client runs on
-  Windows node and reaches the validator via forwarded `127.0.0.1:8899`.
-
-These are documented so that a reviewer on a clean network/host (or with a
-dedicated mainnet RPC) can reproduce the runs without the workarounds.
+- **Dedicated RPC required for cloning.** Public endpoints rate-limit the
+  multi-account clone sets (Jupiter clones 43 accounts). The RPC URL lives in
+  `.env`, which is gitignored; committed manifests record only the bare RPC
+  host, never credentials.
+- **WSL/Windows split on the development machine.** The Linux
+  `solana-test-validator` runs in WSL with a WSL-native ledger
+  (`/tmp/<adapter>-ledger`); the TypeScript client runs on Windows node and
+  reaches the validator via forwarded `127.0.0.1:8899`. A reviewer on a single
+  Linux host needs none of this.
+- **Corporate TLS-intercepting proxy.** The clone fetch used
+  `NODE_TLS_REJECT_UNAUTHORIZED=0` to traverse it; only public on-chain
+  account data was fetched.
 
 ## Run manifests
 
-Each successful (or attempted) run emits a manifest to
-`tests/mainnet-fork/manifests/<adapter>.json` recording the repo commit, clone
-slot, per-account content hashes, built-`.so` hashes, exact commands, and the
-real mocha outcome. See `tests/mainnet-fork/manifests/README.md` for the schema.
+Committed manifests (all emitted by `scripts/emit-fork-manifest.ts` from the
+on-disk built `.so` files, the cloned fixtures, and the real mocha exit code
+of the run that just happened):
 
-`scripts/run-mainnet-fork-tests.ts` calls `emitForkManifest(...)` (exported from
-`scripts/emit-fork-manifest.ts`) after each adapter's run, so the committed
-manifest is always derived from the real exit code of the run that just
-happened. The `--warp-slot` is read back from the generated
-`.mainnet-fork-fixtures/start-<adapter>-validator.sh`. The emitter is still
-runnable standalone (`node scripts/emit-fork-manifest.ts <adapter> --exit-code=N
-…`) for manual re-emission.
-
-Committed real manifests (emitted by `scripts/emit-fork-manifest.ts` from the
-on-disk built `.so` files, the cloned fixtures, and the real mocha exit code):
-
-- `tests/mainnet-fork/manifests/marginfi-usdc.json` — `testOutcome.status: "passed"`, mocha exit `0`.
-- `tests/mainnet-fork/manifests/kamino-usdc.json` — `testOutcome.status: "passed"`, mocha exit `0`.
-- `tests/mainnet-fork/manifests/maple-syrup.json` — `testOutcome.status: "passed"`, mocha exit `0` (re-run 2026-06-09).
-- `tests/mainnet-fork/manifests/jupiter-lp.json` — `testOutcome.status: "failed"`, mocha exit `1`; oracle-freshness blocker characterised (2026-06-09).
-- `tests/mainnet-fork/manifests/drift-insurance-fund.json` — `testOutcome.status: "failed"`, mocha exit `1`; discriminator-mismatch blocker characterised (2026-06-09).
-
-The passing manifests (marginfi, kamino) were re-emitted on 2026-06-08 after the registry program id was
-reconciled to the locally controlled keypair
-`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn` (so a real devnet deploy is
-possible). That change rebuilt `registry.so` and `dispatcher.so` (the dispatcher
-derives the adapter-entry PDA from `registry::ID` at compile time), so both `.so`
-sha256 hashes changed; the fork tests were re-run green against the rebuilt
-binaries and the manifests now pin the new hashes.
-
-`repoCommit` is set to `e55e47040f96209b11683a82d99c9ce54424d211` in all five
-manifests (the initial repository commit, 2026-06-09). The tests were run against
-the same code state; the commit was created after the test runs but no source
-files changed between the final test runs and the commit.
-
-## What "done" looks like for this document
-
-- [x] MarginFi run manifest committed with `testOutcome.status: "passed"`.
-- [x] Kamino run manifest committed with `testOutcome.status: "passed"`.
-- [x] Maple run manifest committed with `testOutcome.status: "passed"` (`maple-syrup.json`, re-run 2026-06-09).
-- [x] Jupiter: committed failing manifest (`jupiter-lp.json`, `testOutcome.status:"failed"`) with reproduced root-cause — `StaleOraclePrice (6003)` at `oracle.rs:265`; cloned Doves oracle accounts have publish_time≈epoch-zero; keeper replay blocked by `InvalidSigner(6006)` (2026-06-09).
-- [x] Drift: committed failing manifest (`drift-insurance-fund.json`, `testOutcome.status:"failed"`) with reproduced root-cause — discriminator mismatch confirmed on both fork and mainnet (2026-06-09). Correct discriminators unknown; see manifest `notes` for details.
+- `kamino-usdc.json` — `passed`, exit 0 (re-run 2026-06-09).
+- `marginfi-usdc.json` — `passed`, exit 0 (re-run 2026-06-09).
+- `maple-syrup.json` — `passed`, exit 0 (re-run 2026-06-09).
+- `drift-insurance-fund.json` — `passed`, exit 0 (2026-06-09, historical-binary
+  fork; binary sha256 pinned in `localPrograms`, methodology in `notes`).
+- `jupiter-lp.json` — `failed`, exit 1 (real failing run; blocker above).

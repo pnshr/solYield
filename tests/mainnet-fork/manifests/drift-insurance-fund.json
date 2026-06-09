@@ -1,12 +1,12 @@
 {
   "adapter": "drift",
   "displayName": "Drift Insurance Fund",
-  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
-  "generatedAt": "2026-06-08T19:57:41.597Z",
+  "repoCommit": "dcdf024c771c8491d944b741e5f6c50803a89363",
+  "generatedAt": "2026-06-09T19:46:35.233Z",
   "cluster": "mainnet-fork",
-  "rpcUrl": "https://solana-rpc.publicnode.com",
-  "baseSlot": 425148959,
-  "warpSlot": "425148959",
+  "rpcUrl": "https://mainnet.helius-rpc.com",
+  "baseSlot": 425403081,
+  "warpSlot": "425403081",
   "localPrograms": [
     {
       "label": "dispatcher",
@@ -24,10 +24,53 @@
       "label": "drift-insurance-fund adapter",
       "programId": "mWDRjDXGpQupue6j74cdWJD7BJ1XygdaxU7vc52BLve",
       "soPath": "target/deploy/drift_insurance_fund.so",
-      "soSha256": "e58d6f76e0dcd71db7ed54cacf5d35af4db882df80b4eea1397c3d438875e28a"
+      "soSha256": "8a1289916c22c3bb6cf7b7ecf412f714c8b9adf5bfe09793b4bd5c4040bd53c1"
+    },
+    {
+      "label": "drift program (official protocol-v2 v2.161.0 built from source; scripts/build-drift-v2161.sh)",
+      "programId": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH",
+      "soPath": ".mainnet-fork-fixtures/drift-v2.161.0.so",
+      "soSha256": "5846a3bb13ddb7954741493b958a0dd22b4516551a130b45b10be03ccc6057f2"
     }
   ],
-  "clonedAccounts": [],
+  "clonedAccounts": [
+    {
+      "label": "Drift state",
+      "address": "5zpq7DvB6UdFFvpmBPspGPNfUGoBRRCE2HHg5u3gxcsN",
+      "kind": "account",
+      "dataSha256": "f4bbd1c10885ea5584f8d9704ddf0e86a6d0eb7b07084c0649159d8a33786f8d"
+    },
+    {
+      "label": "Drift USDC spot market",
+      "address": "6gMq3mRCKf8aP3ttTyYhuijVZ2LGi14oDsBbkgubfLB3",
+      "kind": "account",
+      "dataSha256": "4eb811a4b857779faac4a45ce713a19f3b039ef07491a69bf6705a1e595c5a78"
+    },
+    {
+      "label": "Drift USDC spot market vault",
+      "address": "GXWqPpjQpdz7KZw9p7f5PX2eGxHAhvpNXiviFkAB8zXg",
+      "kind": "account",
+      "dataSha256": "f1028c2e315e5e6c168cc3887963e093fd93d468afe3e040fee1d728a35fcf5e"
+    },
+    {
+      "label": "Drift USDC insurance fund vault",
+      "address": "2CqkQvYxp9Mq4PqLvAQ1eryYxebUh4Liyn5YMDtXsYci",
+      "kind": "account",
+      "dataSha256": "cdce680eb6699cbe5b6735eb436e2f9bfaa3948684c23b01ae6dc6655e85ef76"
+    },
+    {
+      "label": "Drift USDC oracle",
+      "address": "9VCioxmni2gDLv11qufWzT3RDERhQE4iY5Gf7NTfYyAV",
+      "kind": "account",
+      "dataSha256": "45e2bab6a1a6febb17712754937d30aa3cc56ab841d9849dfda4692d89955060"
+    },
+    {
+      "label": "USDC mint",
+      "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "kind": "account",
+      "dataSha256": "d7eecd6807ae8a5e3536a032745501d860b97d6d3ffeddb0793a07b24c6ca27d"
+    }
+  ],
   "fundedFixtures": [
     {
       "label": "funded user SOL account",
@@ -46,10 +89,10 @@
     "test": "npm run test:fork:drift"
   },
   "testOutcome": {
-    "status": "failed",
-    "mochaExitCode": 1,
-    "durationMs": 4953,
-    "runAt": "2026-06-08T19:57:41.603Z"
+    "status": "passed",
+    "mochaExitCode": 0,
+    "durationMs": 7617,
+    "runAt": "2026-06-09T19:46:35.256Z"
   },
-  "notes": "ROOT CAUSE (reproduced 2026-06-09): The test sends sha256('global:initialize_user_stats')[:8] = [254,243,72,98,251,130,168,213] as the Anchor instruction discriminator. The deployed Drift binary (dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH, sha256=72cc3062...) does NOT recognise these bytes: it returns AnchorError InstructionFallbackNotFound (Custom 101) for every instruction tried. CONFIRMED NOT A FORK-VALIDATOR ARTIFACT: (1) the binary is byte-identical to the live mainnet deployment; (2) identical InstructionFallbackNotFound failures for the same discriminator bytes were observed in real confirmed mainnet transactions (three transactions from fee-payer Go4w6HVs7nxAjAckPUCibTecXXzs4LEqC3zoSsKRxx1z on 2026-06-07, all returning {InstructionError:[0,{Custom:101}]}); (3) exhaustive binary search of the 6.7 MB ELF finds no sha256-based discriminator bytes in any section (.text, .rodata, .data.rel.ro) or as BPF lddw split-immediate halves. WHAT IS NEEDED TO FIX: determine the actual instruction bytes the deployed binary accepts \u0432\u0402\u201d either by fetching raw instruction data from a confirmed-successful mainnet Drift transaction (requires a public RPC that exposes CPI inner-instruction data), or by using DriftClient with a real funded account and observing the encoded bytes. The adapter hardcoded discriminators (lib.rs lines 21-24) and the camelizeDriftIdl helper in drift-insurance-fund-flow.ts will both need updating once the correct values are known."
+  "notes": "HISTORICAL-BINARY FORK: the Drift program loaded into the fork is the official open-source protocol-v2 v2.161.0 binary built from source (scripts/build-drift-v2161.sh), NOT the currently deployed mainnet binary. Reason: the mainnet deployment at slot 410633860 removed every user-facing instruction (deposit/withdraw/initialize_user/all insurance-fund staking return InstructionFallbackNotFound when simulated against live mainnet; only admin instructions dispatch), and the admin drained the USDC insurance-fund vault at slot 410454545. Insurance-fund staking therefore no longer exists on mainnet and cannot pass against the deployed binary for any implementation. All cloned ACCOUNT state (Drift state, USDC spot market, vaults, oracle) is real current mainnet state. Fresh validator per run; WSL validator + node client over forwarded localhost."
 }

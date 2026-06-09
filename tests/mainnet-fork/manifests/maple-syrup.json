@@ -1,12 +1,12 @@
 {
   "adapter": "maple",
   "displayName": "Maple syrupUSDC",
-  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
-  "generatedAt": "2026-06-09T06:01:53.238Z",
+  "repoCommit": "dcdf024c771c8491d944b741e5f6c50803a89363",
+  "generatedAt": "2026-06-09T19:46:12.381Z",
   "cluster": "mainnet-fork",
-  "rpcUrl": "https://solana-rpc.publicnode.com",
-  "baseSlot": 425276853,
-  "warpSlot": "425276853",
+  "rpcUrl": "https://mainnet.helius-rpc.com",
+  "baseSlot": 425403022,
+  "warpSlot": "425403022",
   "localPrograms": [
     {
       "label": "dispatcher",
@@ -43,8 +43,8 @@
   "testOutcome": {
     "status": "passed",
     "mochaExitCode": 0,
-    "durationMs": 7649,
-    "runAt": "2026-06-09T06:01:53.242Z"
+    "durationMs": 7930,
+    "runAt": "2026-06-09T19:46:12.385Z"
   },
   "notes": ""
 }
