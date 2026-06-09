@@ -133,9 +133,11 @@ npm run test:fork:maple
 npm run test:fork:drift
 ```
 
-MarginFi, Kamino, and Maple have locally passing dispatcher-driven fork flows.
-Jupiter and Drift have typed real CPI paths, but their fork tests are still
-blocked by protocol runtime requirements documented in
+MarginFi, Kamino, Maple, and Drift have passing dispatcher-driven fork flows
+(Drift via the official protocol-v2 v2.161.0 binary built from source — see
+`scripts/build-drift-v2161.sh` and the methodology notes in
+`docs/MAINNET_FORK_TEST_RESULTS.md`). Jupiter has a typed real CPI path but its
+fork test is still blocked by protocol runtime requirements documented in
 `docs/INTEGRATION_NOTES.md`. Per-adapter fork status, the reproducible
 clone→validator→test procedure, and machine-readable run manifests are tracked
 in `docs/MAINNET_FORK_TEST_RESULTS.md` and `tests/mainnet-fork/manifests/`.
