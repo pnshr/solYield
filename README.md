@@ -24,8 +24,7 @@ Jupiter remains blocked on fork-clock/oracle-freshness, with the real failing
 manifest committed. The Maple adapter is honest syrupUSDC custody rather than
 a full protocol integration. Registry is deployed to devnet
 (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`). All five fork-test
-manifests are committed. See `docs/BOUNTY_100_POINT_PLAN.md` for the
-authoritative execution plan.
+manifests are committed.
 
 ## Architecture
 
