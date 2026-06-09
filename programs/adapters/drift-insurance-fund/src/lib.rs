@@ -36,8 +36,8 @@ const IF_STAKE_MARKET_INDEX_OFFSET: usize = 8 + 112;
 const SPOT_MARKET_PUBKEY_OFFSET: usize = 8;
 const SPOT_MARKET_MINT_OFFSET: usize = 8 + 64;
 const SPOT_MARKET_VAULT_OFFSET: usize = 8 + 96;
-const SPOT_MARKET_IF_VAULT_OFFSET: usize = 8 + 160;
-const SPOT_MARKET_IF_TOTAL_SHARES_OFFSET: usize = 8 + 192;
+const SPOT_MARKET_IF_VAULT_OFFSET: usize = 8 + 296;
+const SPOT_MARKET_IF_TOTAL_SHARES_OFFSET: usize = 8 + 328;
 
 #[program]
 pub mod drift_insurance_fund {

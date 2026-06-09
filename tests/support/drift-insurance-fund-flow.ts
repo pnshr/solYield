@@ -47,12 +47,14 @@ function camelizeDriftIdl(idl: unknown): anchor.Idl {
   for (const instruction of cloned.instructions ?? []) {
     const originalName = instruction.name;
     instruction.name = toCamelCase(instruction.name);
-    instruction.discriminator = Array.from(
-      createHash("sha256")
-        .update(`global:${originalName}`)
-        .digest()
-        .subarray(0, 8),
-    );
+    if (!instruction.discriminator || instruction.discriminator.length === 0) {
+      instruction.discriminator = Array.from(
+        createHash("sha256")
+          .update(`global:${originalName}`)
+          .digest()
+          .subarray(0, 8),
+      );
+    }
     camelizeIdlAccounts(instruction.accounts);
     for (const arg of instruction.args ?? []) {
       arg.name = toCamelCase(arg.name);
