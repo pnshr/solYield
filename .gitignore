@@ -10,3 +10,4 @@ coverage/
 /tmp/
 test-ledger/
 *.keypair.json
+.claude/
