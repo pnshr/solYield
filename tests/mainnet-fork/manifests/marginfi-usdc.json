@@ -1,7 +1,7 @@
 {
   "adapter": "marginfi",
   "displayName": "MarginFi USDC",
-  "repoCommit": null,
+  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
   "generatedAt": "2026-06-08T15:34:38.948Z",
   "cluster": "mainnet-fork",
   "rpcUrl": "https://solana-rpc.publicnode.com",

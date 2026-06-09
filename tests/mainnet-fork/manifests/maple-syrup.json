@@ -1,7 +1,7 @@
 {
   "adapter": "maple",
   "displayName": "Maple syrupUSDC",
-  "repoCommit": null,
+  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
   "generatedAt": "2026-06-09T06:01:53.238Z",
   "cluster": "mainnet-fork",
   "rpcUrl": "https://solana-rpc.publicnode.com",

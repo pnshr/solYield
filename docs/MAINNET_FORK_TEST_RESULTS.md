@@ -123,9 +123,10 @@ derives the adapter-entry PDA from `registry::ID` at compile time), so both `.so
 sha256 hashes changed; the fork tests were re-run green against the rebuilt
 binaries and the manifests now pin the new hashes.
 
-`repoCommit` is currently `null` because the repository has no commits yet
-(GitHub publish is a later phase); it is populated automatically once `HEAD`
-exists.
+`repoCommit` is set to `e55e47040f96209b11683a82d99c9ce54424d211` in all five
+manifests (the initial repository commit, 2026-06-09). The tests were run against
+the same code state; the commit was created after the test runs but no source
+files changed between the final test runs and the commit.
 
 ## What "done" looks like for this document
 

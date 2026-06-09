@@ -1,7 +1,7 @@
 {
   "adapter": "jupiter",
   "displayName": "Jupiter LP",
-  "repoCommit": null,
+  "repoCommit": "e55e47040f96209b11683a82d99c9ce54424d211",
   "generatedAt": "2026-06-09T09:54:35.118Z",
   "cluster": "mainnet-fork",
   "rpcUrl": "https://solana-rpc.publicnode.com",
@@ -51,5 +51,5 @@
     "durationMs": 2976,
     "runAt": "2026-06-09T09:54:35.122Z"
   },
-  "notes": "ROOT CAUSE (reproduced 2026-06-09): Jupiter Perpetuals (PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu) throws StaleOraclePrice (6003) at programs/perpetuals/src/state/oracle.rs:265 on the first addLiquidity2 instruction. The Anchor require_gte! check fires with Left=5, Right=66653: oracle.last_update_time (5, effectively Unix-epoch-zero) < current_unix_timestamp - max_oracle_age_sec (66653 = ~18.5 hours back from the fork's clock). The Doves/Edge oracle price accounts (DoVEsk76QybCEHQGzkvYPWLQu9gzNoZZZt3TPiL597e) are static mainnet snapshots cloned at baseSlot=425279231; their stored publish_time is not refreshed by the fork validator, so the Jupiter program's freshness gate rejects every transaction. ATTEMPTED WORKAROUND: replaying a real on-chain Doves oracle update CPI fails with InvalidSigner(6006) — the keeper that signs oracle updates holds a private key unknown to us. WHAT IS NEEDED TO FIX: either (a) run a live oracle keeper co-located with the fork validator to post fresh Doves prices, or (b) modify the cloned oracle account fixtures to inject a publish_time equal to the fork's current unix_timestamp (requires knowing the exact byte offset of publish_time in the Doves price account layout). Neither path is available in the current static-fork setup."
+  "notes": "ROOT CAUSE (reproduced 2026-06-09): Jupiter Perpetuals (PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu) throws StaleOraclePrice (6003) at programs/perpetuals/src/state/oracle.rs:265 on the first addLiquidity2 instruction. The Anchor require_gte! check fires with Left=5, Right=66653: oracle.last_update_time (5, effectively Unix-epoch-zero) < current_unix_timestamp - max_oracle_age_sec (66653 = ~18.5 hours back from the fork's clock). The Doves/Edge oracle price accounts (DoVEsk76QybCEHQGzkvYPWLQu9gzNoZZZt3TPiL597e) are static mainnet snapshots cloned at baseSlot=425279231; their stored publish_time is not refreshed by the fork validator, so the Jupiter program's freshness gate rejects every transaction. ATTEMPTED WORKAROUND: replaying a real on-chain Doves oracle update CPI fails with InvalidSigner(6006) \u0432\u0402\u201d the keeper that signs oracle updates holds a private key unknown to us. WHAT IS NEEDED TO FIX: either (a) run a live oracle keeper co-located with the fork validator to post fresh Doves prices, or (b) modify the cloned oracle account fixtures to inject a publish_time equal to the fork's current unix_timestamp (requires knowing the exact byte offset of publish_time in the Doves price account layout). Neither path is available in the current static-fork setup."
 }
