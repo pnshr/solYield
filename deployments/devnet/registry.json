@@ -4,12 +4,12 @@
   "registryProgramId": "HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn",
   "registryConfig": "6nvRCSjroNvqsVeAzTKmdfjUEfgDarHdLXvwect6gXvY",
   "governanceAuthority": "9B4MhXCsqr2SyQNRw4KoakcwriqN637GhpjxCnaafSmd",
-  "adapterCount": 0,
+  "adapterCount": 1,
   "programDataAddress": "ZRg2ehqsY2PVDnPTvomkJA48ui6T9S2vGVKN9H21osu",
   "programDataSlot": 468043978,
-  "lastVerifiedSlot": 468044072,
+  "lastVerifiedSlot": 468506835,
   "initSignature": "3w3hCf3ye6SombevDTGbCh7tbMge1TqrNTJ3WpSYbwecZNGYsdtEzh8uV3jegbVp3cVmsC6bHdhALzokqVs1JVmv",
   "deployedAt": "2026-06-08T15:23:39.564Z",
-  "verifiedAt": "2026-06-08T15:23:54.974Z",
+  "verifiedAt": "2026-06-10T16:03:51.298Z",
   "notes": "Written by scripts/deploy-devnet.ts after a real devnet deploy+init. Run `npm run verify:devnet:registry -- --write` to enrich and confirm this manifest against live on-chain state."
 }

@@ -69,11 +69,26 @@ the config PDA, and finally writes the manifest.
 
 ## Adapter registration
 
-The deployed registry currently has `adapterCount: 0`. To register an adapter:
+The deployed registry has `adapterCount: 1`: the Kamino USDC adapter is
+proposed and **approved** on devnet, demonstrating the full governance path
+on-chain.
+
+| Field | Value |
+| --- | --- |
+| Adapter entry PDA | `FP6g94PEm5hcFoK3keZuKVwT4F6AyAjfUeoRLJuiyszf` |
+| Adapter program ID | `G4g2RMwZs2dH2sVe3ChQ4VpM2DNZu8EESdRyHTc3P9T4` |
+| Supported mint | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` (USDC) |
+| Version | 1 |
+| Status | Approved |
+| Propose signature | `VmJML8XvGsSmQaqGXgCtJjMpH5kosRnmYrGoZisVkd1Ryuh4DZ1sYGMNcvk938GRBHQwQcTipQBC3fv5QgGvLqj` |
+| Approve signature | `5bDxJWzzTaYrvF3apvyNY6RUyEnR8boGsowWx7VdFZtGxEYxUVa3pgU18KTdgZHhTKggK1gDsmq1kytHJYhURP6P` |
+
+To register another adapter:
 
 1. Build the adapter program and note its program ID.
-2. Use `proposeAdapter` + `approveAdapter` from the SDK (or the dispatcher
-   examples in `examples/`) with the governance authority keypair.
+2. Use `proposeAdapter` + `approveAdapter` from the SDK (or
+   `examples/register-adapter.ts` / `examples/approve-adapter.ts`) with the
+   governance authority keypair.
 3. Run `npm run verify:devnet:registry -- --write` to record the new
    `adapterCount` in the manifest.
 
