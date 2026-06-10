@@ -287,7 +287,6 @@ Documentation-only marker references:
 
 - `README.md`
 - `docs/BUILD_ADAPTER.md`
-- `docs/QUALITY_CHECKLIST.md`
 
 These references describe the marker policy; they are not hidden implementation
 placeholders.
