@@ -7,6 +7,7 @@ import {
   PublicKey,
   SystemProgram,
 } from "@solana/web3.js";
+import { describeWithValidator } from "../support/validator-suite";
 
 const REGISTRY_CONFIG_SEED = Buffer.from("registry_config");
 const ADAPTER_ENTRY_SEED = Buffer.from("adapter_entry");
@@ -63,7 +64,7 @@ async function expectAnchorError(
   }
 }
 
-describe("registry", () => {
+describeWithValidator("registry", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 

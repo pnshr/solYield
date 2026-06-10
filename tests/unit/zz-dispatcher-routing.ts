@@ -7,6 +7,7 @@ import {
   PublicKey,
   SystemProgram,
 } from "@solana/web3.js";
+import { describeWithValidator } from "../support/validator-suite";
 
 const REGISTRY_CONFIG_SEED = Buffer.from("registry_config");
 const ADAPTER_ENTRY_SEED = Buffer.from("adapter_entry");
@@ -108,7 +109,7 @@ function returnDataU64(simulation: any): number {
   return Number(bytes.readBigUInt64LE(0));
 }
 
-describe("dispatcher routing", () => {
+describeWithValidator("dispatcher routing", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 

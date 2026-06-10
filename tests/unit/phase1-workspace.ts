@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { assert } from "chai";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { describeWithValidator } from "../support/validator-suite";
 
 const ADAPTER_CONFIG_SEED = Buffer.from("adapter_config");
 
@@ -25,7 +26,7 @@ function findAdapterConfigPda(
   )[0];
 }
 
-describe("phase 1 workspace", () => {
+describeWithValidator("phase 1 workspace", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 

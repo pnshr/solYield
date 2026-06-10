@@ -45,4 +45,7 @@ jobs:
 
       - run: npm ci
       - run: anchor build
+      # Validator-backed suites self-skip when ANCHOR_PROVIDER_URL is unset
+      # (tests/support/validator-suite.ts); they run fully under `anchor test`
+      # locally. CI asserts the build plus test-module load integrity.
       - run: npm run test:unit
