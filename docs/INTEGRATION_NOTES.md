@@ -182,11 +182,31 @@ Verified data:
 - Mainnet-fork clone/fixture list: implemented in
   `scripts/clone-mainnet-accounts.ts`.
 
+Why there is no native Maple protocol CPI on Solana (verified on-chain
+2026-06-10):
+
+- Maple's lending pools (deposit/redeem for syrupUSDC) live on Ethereum; no
+  Maple lending program is deployed on Solana. The Solana representation of
+  syrupUSDC exists only as a CCIP-bridged SPL token.
+- The Solana syrupUSDC mint (`AvZZF1…`, supply ≈ 101.7M, 6 decimals) has mint
+  authority `BL428ZGJqpmWRxJx8G3d52eEgTYyWyHj5suUZERdxk1w` — a CCIP token-pool
+  controlled PDA. Minting/burning happens exclusively through CCIP cross-chain
+  messages, not through any user-reachable Solana instruction.
+- Therefore the honest maximum for a Solana-side adapter is a yield-bearing
+  token position (custody + valuation), which is what this adapter implements.
+  Anything claiming on-Solana Maple deposit/redeem would be fiction.
+
 Known limitations:
 
-- The adapter values in native syrupUSDC units, not USDC units.
+- The adapter values in native syrupUSDC units, not USDC units. A USDC
+  denomination extension can read the cloned Chainlink store feed
+  (`CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T`, owner program
+  `HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny`, updated roughly daily) and
+  multiply shares by the syrupUSDC/USDC answer; left as a documented future
+  extension to avoid hand-parsing the Chainlink transmissions layout in the
+  reference adapter.
 - Fork tests preload syrupUSDC through a deterministic fixture because the real
-  syrupUSDC mint authority is unavailable.
+  syrupUSDC mint authority is a CCIP pool PDA (see above) and cannot sign.
 - Direct CCIP-native mint/redeem still needs the full CCIP SVM router account
   list, fee estimation path, message encoding, and asynchronous settlement
   monitoring.
