@@ -346,13 +346,16 @@ Position model:
 `withdraw` transfers syrupUSDC from the vault back to the user using PDA signer
 seeds.
 
-`current_value` returns the vault token amount in native syrupUSDC units.
+`current_value` converts the vault token amount into USDC units using the
+Chainlink SYRUPUSDC-USDC exchange-rate feed (validated by feed address, owner
+program, and feed version; floor rounding).
 
 Known limitations:
 
 - This is a syrupUSDC asset-position adapter, not direct CCIP mint/redeem.
-- It does not return USDC-denominated value; doing that would require a versioned
-  value extension or a standard change.
+- The Chainlink feed updates on deviation (roughly daily); production
+  deployments should layer an explicit staleness policy on top of the
+  identity checks.
 
 ## Async-Withdraw Semantics
 
@@ -386,10 +389,13 @@ both the adapter metadata URI and `docs/INTEGRATION_NOTES.md`.
 `current_value` MUST return a `u64` in native units of the adapter's
 `supported_mint`. For USDC-based adapters this is micro-USDC (`1_000_000` = 1 USDC).
 
-Adapters that value positions in a different unit (e.g. Maple syrupUSDC in
-syrupUSDC units) must declare this in the adapter's `metadata_uri` field and in
-`docs/INTEGRATION_NOTES.md`. The dispatcher forwards the raw `u64`; callers are
-responsible for interpreting it using adapter metadata.
+All five reference adapters conform: USDC-based adapters return micro-USDC
+directly, and the Maple adapter converts its syrupUSDC position into USDC
+units through the Chainlink SYRUPUSDC-USDC exchange-rate feed on-chain. An
+adapter that cannot value its position in supported-mint units must declare
+the deviation in its `metadata_uri` and in `docs/INTEGRATION_NOTES.md`; the
+dispatcher forwards the raw `u64`, and callers interpret it using adapter
+metadata.
 
 ## Event Schema
 

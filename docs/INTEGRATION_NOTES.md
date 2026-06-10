@@ -167,8 +167,8 @@ Known limitations:
 ## Maple Syrup
 
 Status: implemented Solana-side syrupUSDC asset-position adapter. The adapter
-custodies user-owned syrupUSDC in a PDA-owned vault and returns native syrupUSDC
-value. It does not pretend to perform CCIP native mint/redeem.
+custodies user-owned syrupUSDC in a PDA-owned vault and returns its value in
+USDC units via the Chainlink SYRUPUSDC-USDC exchange-rate feed. It does not pretend to perform CCIP native mint/redeem.
 
 Verified data:
 
@@ -198,13 +198,15 @@ Why there is no native Maple protocol CPI on Solana (verified on-chain
 
 Known limitations:
 
-- The adapter values in native syrupUSDC units, not USDC units. A USDC
-  denomination extension can read the cloned Chainlink store feed
+- `deposit`/`withdraw`/`current_value` value all use USDC units: shares are
+  converted through the Chainlink store feed
   (`CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T`, owner program
-  `HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny`, updated roughly daily) and
-  multiply shares by the syrupUSDC/USDC answer; left as a documented future
-  extension to avoid hand-parsing the Chainlink transmissions layout in the
-  reference adapter.
+  `HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny`). The adapter validates the
+  feed address/owner/version and reads the latest live transmission (layout
+  offsets verified against the live mainnet account: header 200 bytes,
+  48-byte transmissions, answer i128, decimals 6). The feed updates roughly
+  daily (deviation-based); a production deployment should add an explicit
+  staleness policy on top of the identity checks.
 - Fork tests preload syrupUSDC through a deterministic fixture because the real
   syrupUSDC mint authority is a CCIP pool PDA (see above) and cannot sign.
 - Direct CCIP-native mint/redeem still needs the full CCIP SVM router account

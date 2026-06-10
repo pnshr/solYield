@@ -25,6 +25,10 @@ export const MAPLE_SYRUP_USDC_MINT = new PublicKey(
   "AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj",
 );
 
+export const MAPLE_SYRUP_USDC_ORACLE = new PublicKey(
+  "CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T",
+);
+
 type WorkspaceProgram = Program & {
   account: Record<string, { fetch: (address: PublicKey) => Promise<any> }>;
 };
@@ -307,6 +311,7 @@ function depositRemainingAccounts(owner: PublicKey, vaultTokenAccount: PublicKey
       isSigner: false,
     },
     { pubkey: vaultTokenAccount, isWritable: true, isSigner: false },
+    { pubkey: MAPLE_SYRUP_USDC_ORACLE, isWritable: false, isSigner: false },
   ];
 }
 
@@ -319,6 +324,7 @@ function withdrawRemainingAccounts(owner: PublicKey, vaultTokenAccount: PublicKe
       isWritable: true,
       isSigner: false,
     },
+    { pubkey: MAPLE_SYRUP_USDC_ORACLE, isWritable: false, isSigner: false },
   ];
 }
 
@@ -326,6 +332,7 @@ function valueRemainingAccounts(vaultTokenAccount: PublicKey) {
   return [
     { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
     { pubkey: vaultTokenAccount, isWritable: false, isSigner: false },
+    { pubkey: MAPLE_SYRUP_USDC_ORACLE, isWritable: false, isSigner: false },
   ];
 }
 
@@ -501,9 +508,20 @@ export async function runMapleSyrupDispatcherFlow(): Promise<void> {
       event.name === "currentValueQueried",
   );
   assert.isDefined(valueEvent, "Dispatcher should emit CurrentValueQueried.");
-  assert.strictEqual(
-    valueEvent!.data.value.toNumber(),
-    Number(startingVaultBalance + 1_000_000n),
+  const vaultShares = Number(startingVaultBalance + 1_000_000n);
+  const usdcValue = valueEvent!.data.value.toNumber();
+  // value is USDC-denominated via the Chainlink SYRUPUSDC-USDC exchange-rate
+  // feed; the live rate exceeds 1.0, so the USDC value must strictly exceed
+  // the raw share count and stay within a sane band.
+  assert.isAbove(
+    usdcValue,
+    vaultShares,
+    "USDC value should exceed share count while the syrupUSDC rate > 1.",
+  );
+  assert.isBelow(
+    usdcValue,
+    vaultShares * 2,
+    "USDC value should stay within a sane multiple of shares.",
   );
 
   await dispatcher.methods

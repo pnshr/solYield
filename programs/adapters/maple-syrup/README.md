@@ -17,7 +17,9 @@ CCIP. This adapter implements an honest Solana-side asset-position flow:
 - `deposit` transfers syrupUSDC from the user into a PDA-owned vault token
   account.
 - `withdraw` transfers syrupUSDC from the vault back to the user.
-- `current_value` returns the vault's syrupUSDC amount in native syrupUSDC units.
+- `current_value` returns the vault position valued in USDC units via the
+  Chainlink SYRUPUSDC-USDC exchange-rate feed
+  (`CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T`).
 
 The adapter does not pretend to perform CCIP native mint/redeem or a direct
 Solana Maple lending CPI.
@@ -45,7 +47,8 @@ asset-position adapter.
 ## Share/Value Calculation Method
 
 Shares equal the syrupUSDC token amount held in the PDA-owned vault.
-`current_value` returns that same native syrupUSDC amount.
+`current_value` converts the vault's syrupUSDC amount into USDC units using
+the Chainlink exchange-rate feed (floor rounding).
 
 TODO_INTEGRATION: A future USDC-denominated value extension can use the
 syrupUSDC/USDC Chainlink oracle, but that would change the current standard's

@@ -6,7 +6,10 @@ use anchor_lang::solana_program::{
 
 pub mod constants;
 
-use constants::{MAPLE_SYRUP_USDC_MINT, TOKEN_PROGRAM_ID};
+use constants::{
+    CHAINLINK_STORE_PROGRAM_ID, MAPLE_SYRUP_USDC_MINT, MAPLE_SYRUP_USDC_ORACLE,
+    TOKEN_PROGRAM_ID,
+};
 
 declare_id!("CnAVx7eyK1MZdkQVAWZMVE9B9aXFcxKmv8bS8dEpgvsC");
 
@@ -18,6 +21,20 @@ const SPL_TOKEN_TRANSFER_IX: u8 = 3;
 const TOKEN_ACCOUNT_MINT_OFFSET: usize = 0;
 const TOKEN_ACCOUNT_OWNER_OFFSET: usize = 32;
 const TOKEN_ACCOUNT_AMOUNT_OFFSET: usize = 64;
+
+// Chainlink store `Transmissions` feed account (SYRUPUSDC-USDC Exchange Rate,
+// CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T). Offsets verified against the
+// live mainnet account (248 bytes = 200-byte header + one 48-byte live
+// transmission): description "SYRUPUSDC-USDC Exchange Rate", decimals 6,
+// latest answer ~1.168e6.
+const FEED_VERSION_OFFSET: usize = 8;
+const FEED_SUPPORTED_VERSION: u8 = 2;
+const FEED_DECIMALS_OFFSET: usize = 138;
+const FEED_LIVE_LENGTH_OFFSET: usize = 148;
+const FEED_LIVE_CURSOR_OFFSET: usize = 152;
+const FEED_TRANSMISSIONS_OFFSET: usize = 200;
+const FEED_TRANSMISSION_SIZE: usize = 48;
+const FEED_TRANSMISSION_ANSWER_OFFSET: usize = 16;
 
 #[program]
 pub mod maple_syrup {
@@ -108,20 +125,21 @@ pub mod maple_syrup {
         .map_err(|_| error!(MapleSyrupError::ProtocolCpiFailed))?;
 
         let shares = read_token_amount(&ctx.accounts.vault_token_account)?;
+        let value = shares_to_usdc_value(shares, &ctx.accounts.price_feed)?;
         let position = &mut ctx.accounts.position;
         position.deposited_amount = position
             .deposited_amount
             .checked_add(amount)
             .ok_or(MapleSyrupError::MathOverflow)?;
         position.shares = shares;
-        position.last_value = shares;
+        position.last_value = value;
 
         emit!(MapleSyrupDeposit {
             owner: position.owner,
             mint: ctx.accounts.config.supported_mint,
             amount,
             shares,
-            value: shares,
+            value,
         });
 
         Ok(())
@@ -170,17 +188,18 @@ pub mod maple_syrup {
         .map_err(|_| error!(MapleSyrupError::ProtocolCpiFailed))?;
 
         let shares = read_token_amount(&ctx.accounts.vault_token_account)?;
+        let value = shares_to_usdc_value(shares, &ctx.accounts.price_feed)?;
         let position = &mut ctx.accounts.position;
         position.deposited_amount = position.deposited_amount.saturating_sub(amount);
         position.shares = shares;
-        position.last_value = shares;
+        position.last_value = value;
 
         emit!(MapleSyrupWithdraw {
             owner: position.owner,
             mint: ctx.accounts.config.supported_mint,
             amount,
             shares,
-            value: shares,
+            value,
         });
 
         Ok(())
@@ -196,13 +215,14 @@ pub mod maple_syrup {
         validate_value_accounts(&ctx)?;
 
         let shares = read_token_amount(&ctx.accounts.vault_token_account)?;
-        set_return_data(&shares.to_le_bytes());
+        let value = shares_to_usdc_value(shares, &ctx.accounts.price_feed)?;
+        set_return_data(&value.to_le_bytes());
 
         emit!(MapleSyrupValue {
             owner: ctx.accounts.position.owner,
             mint: ctx.accounts.config.supported_mint,
             shares,
-            value: shares,
+            value,
         });
 
         Ok(())
@@ -269,6 +289,8 @@ pub struct Deposit<'info> {
     /// CHECK: SPL token account validated by mint and position PDA owner.
     #[account(mut)]
     pub vault_token_account: UncheckedAccount<'info>,
+    /// CHECK: Chainlink SYRUPUSDC-USDC feed, validated by address and owner.
+    pub price_feed: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -295,6 +317,8 @@ pub struct Withdraw<'info> {
     /// CHECK: SPL token account validated by mint and owner.
     #[account(mut)]
     pub user_destination_token_account: UncheckedAccount<'info>,
+    /// CHECK: Chainlink SYRUPUSDC-USDC feed, validated by address and owner.
+    pub price_feed: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -316,6 +340,8 @@ pub struct CurrentValue<'info> {
     pub token_program: UncheckedAccount<'info>,
     /// CHECK: SPL token account validated by mint and position PDA owner.
     pub vault_token_account: UncheckedAccount<'info>,
+    /// CHECK: Chainlink SYRUPUSDC-USDC feed, validated by address and owner.
+    pub price_feed: UncheckedAccount<'info>,
 }
 
 #[account]
@@ -395,6 +421,10 @@ pub enum MapleSyrupError {
     InvalidProtocolProgram,
     #[msg("SPL token account is invalid.")]
     InvalidTokenAccount,
+    #[msg("Chainlink price feed account is invalid.")]
+    InvalidPriceFeed,
+    #[msg("Chainlink price feed has no usable answer.")]
+    InvalidPriceAnswer,
 }
 
 fn validate_common(
@@ -434,7 +464,8 @@ fn validate_deposit_accounts(ctx: &Context<Deposit>) -> Result<()> {
         &ctx.accounts.token_program,
         ctx.accounts.config.supported_mint,
         ctx.accounts.position.key(),
-    )
+    )?;
+    validate_price_feed(&ctx.accounts.price_feed)
 }
 
 fn validate_withdraw_accounts(ctx: &Context<Withdraw>) -> Result<()> {
@@ -451,7 +482,8 @@ fn validate_withdraw_accounts(ctx: &Context<Withdraw>) -> Result<()> {
         &ctx.accounts.token_program,
         ctx.accounts.config.supported_mint,
         ctx.accounts.owner.key(),
-    )
+    )?;
+    validate_price_feed(&ctx.accounts.price_feed)
 }
 
 fn validate_value_accounts(ctx: &Context<CurrentValue>) -> Result<()> {
@@ -462,7 +494,22 @@ fn validate_value_accounts(ctx: &Context<CurrentValue>) -> Result<()> {
         &ctx.accounts.token_program,
         ctx.accounts.config.supported_mint,
         ctx.accounts.position.key(),
-    )
+    )?;
+    validate_price_feed(&ctx.accounts.price_feed)
+}
+
+fn validate_price_feed<'info>(price_feed: &UncheckedAccount<'info>) -> Result<()> {
+    require_keys_eq!(
+        price_feed.key(),
+        MAPLE_SYRUP_USDC_ORACLE,
+        MapleSyrupError::InvalidPriceFeed
+    );
+    require_keys_eq!(
+        *price_feed.owner,
+        CHAINLINK_STORE_PROGRAM_ID,
+        MapleSyrupError::InvalidPriceFeed
+    );
+    Ok(())
 }
 
 fn validate_token_program(config_program: Pubkey, passed_program: Pubkey) -> Result<()> {
@@ -548,6 +595,58 @@ fn read_token_amount<'info>(token_account: &UncheckedAccount<'info>) -> Result<u
     read_u64(&data, TOKEN_ACCOUNT_AMOUNT_OFFSET)
 }
 
+/// Reads the latest live (answer, decimals) pair from the Chainlink store
+/// `Transmissions` feed account.
+fn read_feed_answer<'info>(price_feed: &UncheckedAccount<'info>) -> Result<(u128, u8)> {
+    let data = price_feed.try_borrow_data()?;
+    require!(
+        data.len() >= FEED_TRANSMISSIONS_OFFSET + FEED_TRANSMISSION_SIZE,
+        MapleSyrupError::InvalidPriceFeed
+    );
+    require!(
+        data[FEED_VERSION_OFFSET] == FEED_SUPPORTED_VERSION,
+        MapleSyrupError::InvalidPriceFeed
+    );
+
+    let decimals = data[FEED_DECIMALS_OFFSET];
+    let live_length = read_u32(&data, FEED_LIVE_LENGTH_OFFSET)?;
+    let live_cursor = read_u32(&data, FEED_LIVE_CURSOR_OFFSET)?;
+    require!(live_length > 0, MapleSyrupError::InvalidPriceFeed);
+
+    // The cursor points at the next write slot; the most recent transmission
+    // is one position behind it in the live ring.
+    let latest_index = (live_cursor
+        .checked_add(live_length)
+        .ok_or(MapleSyrupError::MathOverflow)?
+        - 1)
+        % live_length;
+    let answer_offset = FEED_TRANSMISSIONS_OFFSET
+        + latest_index as usize * FEED_TRANSMISSION_SIZE
+        + FEED_TRANSMISSION_ANSWER_OFFSET;
+    let answer = read_i128(&data, answer_offset)?;
+    require!(answer > 0, MapleSyrupError::InvalidPriceAnswer);
+
+    Ok((answer as u128, decimals))
+}
+
+/// Converts a syrupUSDC share amount into USDC native units using the
+/// Chainlink SYRUPUSDC-USDC exchange-rate feed (floor rounding).
+fn shares_to_usdc_value<'info>(
+    shares: u64,
+    price_feed: &UncheckedAccount<'info>,
+) -> Result<u64> {
+    let (answer, decimals) = read_feed_answer(price_feed)?;
+    let scale = 10_u128
+        .checked_pow(decimals as u32)
+        .ok_or(MapleSyrupError::MathOverflow)?;
+    let value = (shares as u128)
+        .checked_mul(answer)
+        .ok_or(MapleSyrupError::MathOverflow)?
+        .checked_div(scale)
+        .ok_or(MapleSyrupError::MathOverflow)?;
+    u64::try_from(value).map_err(|_| error!(MapleSyrupError::MathOverflow))
+}
+
 fn read_pubkey(data: &[u8], offset: usize) -> Result<Pubkey> {
     require!(
         data.len() >= offset + 32,
@@ -566,4 +665,24 @@ fn read_u64(data: &[u8], offset: usize) -> Result<u64> {
     let mut bytes = [0_u8; 8];
     bytes.copy_from_slice(&data[offset..offset + 8]);
     Ok(u64::from_le_bytes(bytes))
+}
+
+fn read_u32(data: &[u8], offset: usize) -> Result<u32> {
+    require!(
+        data.len() >= offset + 4,
+        MapleSyrupError::InvalidPriceFeed
+    );
+    let mut bytes = [0_u8; 4];
+    bytes.copy_from_slice(&data[offset..offset + 4]);
+    Ok(u32::from_le_bytes(bytes))
+}
+
+fn read_i128(data: &[u8], offset: usize) -> Result<i128> {
+    require!(
+        data.len() >= offset + 16,
+        MapleSyrupError::InvalidPriceFeed
+    );
+    let mut bytes = [0_u8; 16];
+    bytes.copy_from_slice(&data[offset..offset + 16]);
+    Ok(i128::from_le_bytes(bytes))
 }

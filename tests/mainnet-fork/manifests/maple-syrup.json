@@ -1,12 +1,12 @@
 {
   "adapter": "maple",
   "displayName": "Maple syrupUSDC",
-  "repoCommit": "dcdf024c771c8491d944b741e5f6c50803a89363",
-  "generatedAt": "2026-06-09T19:46:12.381Z",
+  "repoCommit": "875eba852d8485e2dc19c4fd5151e5cbdab6e981",
+  "generatedAt": "2026-06-10T16:22:28.063Z",
   "cluster": "mainnet-fork",
   "rpcUrl": "https://mainnet.helius-rpc.com",
-  "baseSlot": 425403022,
-  "warpSlot": "425403022",
+  "baseSlot": 425590188,
+  "warpSlot": "425590188",
   "localPrograms": [
     {
       "label": "dispatcher",
@@ -24,7 +24,7 @@
       "label": "maple-syrup adapter",
       "programId": "CnAVx7eyK1MZdkQVAWZMVE9B9aXFcxKmv8bS8dEpgvsC",
       "soPath": "target/deploy/maple_syrup.so",
-      "soSha256": "e02d0fb735b3ca573726968b7fda6125762b0afcad471340ccebd4541c8a5db2"
+      "soSha256": "e16c11f76fefec021773550431258b3b45dc3e0a1395f90560ec1c992ed6af1e"
     }
   ],
   "clonedAccounts": [],
@@ -43,8 +43,8 @@
   "testOutcome": {
     "status": "passed",
     "mochaExitCode": 0,
-    "durationMs": 7930,
-    "runAt": "2026-06-09T19:46:12.385Z"
+    "durationMs": 9787,
+    "runAt": "2026-06-10T16:22:28.068Z"
   },
   "notes": ""
 }

@@ -13,6 +13,9 @@ pub const MAPLE_SYRUP_CCIP_POOL: Pubkey =
     pubkey!("HrTBpF3LqSxXnjnYdR4htnBLyMHNZ6eNaDZGPundvHbm");
 pub const MAPLE_SYRUP_USDC_ORACLE: Pubkey =
     pubkey!("CpNyiFt84q66665Kx64bobxZuMgZ2EecrhAJs1HikS2T");
+/// Chainlink store program that owns the SYRUPUSDC-USDC Exchange Rate feed.
+pub const CHAINLINK_STORE_PROGRAM_ID: Pubkey =
+    pubkey!("HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny");
 pub const TOKEN_PROGRAM_ID: Pubkey = pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 // This adapter intentionally does not pretend to perform CCIP native
