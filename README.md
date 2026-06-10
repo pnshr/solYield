@@ -20,7 +20,7 @@ through dispatcher → registry → adapter → protocol (Kamino, MarginFi, Mapl
 Drift — see `docs/MAINNET_FORK_TEST_RESULTS.md`; the Drift run uses the
 official protocol-v2 v2.161.0 binary built from source because the deployed
 mainnet binary removed all user-facing instructions at slot 410,633,860).
-Jupiter remains blocked on fork-clock/oracle-freshness, with the real failing
+Jupiter remains blocked on keeper-gated oracle freshness, with the real failing
 manifest committed. The Maple adapter is honest syrupUSDC custody rather than
 a full protocol integration. Registry is deployed to devnet
 (`HiLF1P7LguVyBbzMSN3hK4ErGxfxaS6TMPbR6R73Dtdn`). All five fork-test
@@ -230,11 +230,14 @@ Short version:
   is unavailable.
 - Jupiter JLP uses conservative built-in slippage guards because the minimal
   standard does not yet pass caller-specified slippage parameters.
-- Jupiter JLP fork deposit is blocked by strict Doves/Edge oracle freshness in
-  static cloned state. Phase 2 verified the current Doves AG/Edge account and
-  Doves update instruction shape, but replaying mainnet Doves updates fails
-  `InvalidSigner(6006)` because the signed payload is bound to the original
-  keeper signer. The repository does not fake oracle data or keeper signatures.
+- Jupiter JLP fork deposit is blocked by keeper-gated Doves/Edge oracle
+  freshness: on mainnet Jupiter's keepers bundle oracle updates into every
+  transaction, and on a fork both refresh paths fail Doves
+  `InvalidSigner(6006)` for a non-keeper signer — replaying recorded keeper
+  updates and calling the payload-free `UpdateAgPrice2` aggregation
+  (`doves/src/contexts/update_ag_price2.rs:32`) alike. The repository does not
+  fake oracle data or keeper signatures; full root-cause chain in
+  `docs/MAINNET_FORK_TEST_RESULTS.md`.
 - Kamino direct reserve `current_value` does not refresh reserve/oracle state,
   and queued withdrawals are not implemented.
 - Drift final settlement after the unstaking period is intentionally left as a

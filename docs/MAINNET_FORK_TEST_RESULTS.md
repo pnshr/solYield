@@ -70,15 +70,42 @@ exercisable (commit `dcdf024`): the `SpotMarket` insurance-fund field offsets
 were wrong (`insurance_fund.vault` is at byte 304, `insurance_fund.total_shares`
 at byte 336 of the account; verified against cloned mainnet account bytes).
 
-## Jupiter: current blocker
+## Jupiter: current blocker (root cause verified 2026-06-10)
 
-`StaleOraclePrice (6003)` at `perpetuals/src/state/oracle.rs:265`. Latest
-re-run (fresh consistent clone, warp slot = clone slot) shows
-`require_gte!(oracle.last_update_time = 5, current_unix_time − max_age = 91158)`
-— both sides are near Unix epoch zero, which means the fork validator's bank
-clock does not track the warp slot. This narrows the blocker from "keeper
-signatures cannot be replayed" to **fork-clock calibration**, which is still
-under investigation. The committed manifest records the real failing run.
+`StaleOraclePrice (6003)` at `perpetuals/src/state/oracle.rs:265`. The blocker
+is **keeper-gated oracle freshness**, verified empirically; two earlier
+hypotheses were tested and eliminated:
+
+- *Fork-clock drift*: disproved — the fork validator's Clock sysvar tracks
+  real time within seconds (measured drift −8 s at warp slot 425,404,356).
+- *Wrong/missing oracle accounts*: disproved — the cloned custody accounts
+  point at exactly the AG/Edge oracle addresses the harness clones, and the
+  JLP pool still lists the same five custodies.
+
+What actually happens on mainnet: Jupiter's keepers bundle the oracle update
+into **every** transaction (`VerifyMessage` + `UpdateManyWithPythLazer` +
+`UpdateAgPrice2` immediately before the perps instruction), so AG/Edge prices
+are seconds old at execution. On a fork there is no keeper, prices age out,
+and the freshness check fails.
+
+Both refresh paths are closed without Jupiter's keeper key, tested directly
+on the fork:
+
+- Replaying recorded keeper transactions fails Doves `InvalidSigner (6006)`
+  (signed payloads are bound to the keeper).
+- Calling `UpdateAgPrice2` (which has no payload and aggregates from cloned
+  RedStone/Lazer source accounts) with a non-keeper signer fails the same
+  `InvalidSigner (6006)` at `doves/src/contexts/update_ag_price2.rs:32` —
+  the instruction is authority-gated, and the authority is not stored in any
+  clonable account we can substitute.
+
+The repository refuses to fabricate oracle account state, so the test is
+honestly blocked: a passing Jupiter fork run requires either Jupiter keeper
+cooperation (a devnet keeper or test harness) or oracle-state editing that
+this repo's policy rules out. The committed manifest records the real failing
+run. Side observation recorded for reviewers: the USDT Edge oracle is ~131 h
+stale on live mainnet and the live perps program tolerates it, so freshness
+enforcement is evidently per-oracle-type.
 
 ## Reproducible run procedure
 

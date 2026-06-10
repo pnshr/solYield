@@ -103,7 +103,7 @@ MarginFi, Kamino, Maple, and Drift are passing fork paths today (Drift via the
 official protocol-v2 v2.161.0 binary built from source, because the deployed
 mainnet binary removed all user-facing instructions — see
 `docs/MAINNET_FORK_TEST_RESULTS.md`). Jupiter has a typed real CPI adapter
-path but is still blocked in fork execution on fork-clock/oracle freshness for
+path but is still blocked in fork execution on keeper-gated oracle freshness for
 the JLP Perps product. Maple custodies preloaded syrupUSDC in a PDA vault; it
 does not fake CCIP mint/redeem.
 
