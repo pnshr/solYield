@@ -168,7 +168,8 @@ Maple is implemented as a Solana-side syrupUSDC asset-position adapter:
 - Adapter stores the vault and owner position.
 - Deposits transfer syrupUSDC into the vault through SPL Token CPI.
 - Withdrawals transfer syrupUSDC back from the PDA vault.
-- Value is read from the vault token balance in native syrupUSDC units.
+- Value is the vault token balance converted to USDC units through the
+  Chainlink SYRUPUSDC-USDC exchange-rate feed.
 
 Known limitation: it does not fake direct CCIP mint/redeem or asynchronous
 cross-chain settlement. A future CCIP-native Maple adapter should use a new
