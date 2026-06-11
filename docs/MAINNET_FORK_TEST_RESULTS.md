@@ -10,15 +10,15 @@ manifests in [`tests/mainnet-fork/manifests/`](../tests/mainnet-fork/manifests/)
 > blocker — failing tests are never deleted or relabelled. When an earlier
 > root-cause analysis turns out to be wrong, it is corrected here, not erased.
 
-## Status summary (re-verified 2026-06-09, dedicated RPC, fresh clones)
+## Status summary (re-verified 2026-06-10, dedicated RPC, fresh clones)
 
 | Adapter | CPI path | Fork status | Run manifest | Note |
 | --- | --- | --- | --- | --- |
 | Kamino USDC | `depositReserveLiquidity` / `redeemReserveCollateral` | **PASS (verified)** — mocha exit 0, `1 passing` | `kamino-usdc.json` | Current mainnet program + state, cloned at warp slot. |
 | MarginFi USDC | `lending_account_deposit` / `lending_account_withdraw` | **PASS (verified)** — mocha exit 0, `1 passing` | `marginfi-usdc.json` | Current mainnet program + state. |
-| Maple syrupUSDC | SPL custody of syrupUSDC in PDA vault | **PASS (verified)** — mocha exit 0, `1 passing` | `maple-syrup.json` | `current_value` in **USDC units** via the Chainlink SYRUPUSDC-USDC exchange-rate feed (the fork test asserts the conversion executed). Not CCIP mint/redeem. |
+| Maple syrupUSDC | SPL custody of syrupUSDC in PDA vault | **PASS (verified)** — mocha exit 0, `1 passing` | `maple-syrup.json` | `current_value` in **USDC units** via the Chainlink SYRUPUSDC-USDC exchange-rate feed (the fork test asserts the conversion executed). Lending pools are Ethereum-only; no Solana program to CPI into. |
 | Drift Insurance Fund | `add_insurance_fund_stake` / `request_remove_insurance_fund_stake` | **PASS (verified)** — mocha exit 0, `1 passing` | `drift-insurance-fund.json` | **Historical-binary fork** (see below): official protocol-v2 v2.161.0 binary built from source + real current mainnet account state. |
-| Jupiter LP | `addLiquidity2` / `removeLiquidity2` | **Blocked** | `jupiter-lp.json` (failed) | `StaleOraclePrice (6003)`: fork-validator clock vs Doves/Edge oracle timestamps; under investigation (see Jupiter section). |
+| Jupiter LP | `addLiquidity2` / `removeLiquidity2` | **Blocked** | `jupiter-lp.json` (failed) | `StaleOraclePrice (6003)`: keeper-gated oracle freshness — both refresh paths fail Doves `InvalidSigner (6006)` for a non-keeper signer (root cause verified, see Jupiter section). |
 
 All passing runs go through the full path: **dispatcher → registry
 (approve/pause/reject checks) → adapter → real protocol program**, and assert

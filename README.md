@@ -1,5 +1,7 @@
 # Solana Yield Adapter Standard
 
+[![CI](https://github.com/pnshr/solYield/actions/workflows/ci.yml/badge.svg)](https://github.com/pnshr/solYield/actions/workflows/ci.yml)
+
 Reference implementation of a minimal Solana yield adapter standard built
 with Anchor `0.31.1` and Solana `2.2.20`: one dispatcher, one
 governance-gated on-chain registry, five protocol adapters, mainnet-fork test
@@ -184,7 +186,7 @@ Flags:
 | Adapter template | Complete template | Mock accounting only; no protocol CPI. |
 | MarginFi USDC | Real path implemented | Dispatcher + registry + adapter CPI; fork harness included. |
 | Kamino USDC | Real direct reserve path | Reserve deposit/redeem CPI and collateral value math implemented; refreshReserve and queued-withdrawal extensions are documented limitations. |
-| Jupiter LP | Blocked fork path | USDC add/remove-liquidity CPI, JLP share accounting, and AUM/supply value math implemented; fork deposit still fails Jupiter Perps oracle freshness. Doves replay is blocked by keeper signer validation. |
+| Jupiter LP | Real path, fork blocked | USDC add/remove-liquidity CPI, JLP share accounting, and AUM/supply value math implemented. The fork test fails Jupiter Perps oracle freshness because the oracle-refresh path is keeper-gated (`InvalidSigner 6006`), a property of Jupiter's closed oracle loop that affects any implementation. Verified root cause and a reproducible probe are committed (`scripts/probe-jupiter-keeper-gate.js`, `docs/MAINNET_FORK_TEST_RESULTS.md`). |
 | Maple syrupUSDC | Real asset-position path | Custodies user-owned syrupUSDC in a PDA vault and returns USDC-denominated value via the Chainlink SYRUPUSDC-USDC feed; CCIP mint/redeem is a documented future extension. |
 | Drift Insurance Fund | Real path, passing fork test | `add_insurance_fund_stake` / `request_remove` CPI passes against the official protocol-v2 v2.161.0 binary built from source plus real mainnet state. The deployed mainnet binary removed all user-facing instructions (wind-down, slot 410,633,860), so current-binary execution is impossible for any implementation — fully documented in `docs/MAINNET_FORK_TEST_RESULTS.md`. |
 
