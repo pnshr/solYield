@@ -45,7 +45,13 @@ jobs:
 
       - run: npm ci
       - run: anchor build
-      # Validator-backed suites self-skip when ANCHOR_PROVIDER_URL is unset
-      # (tests/support/validator-suite.ts); they run fully under `anchor test`
-      # locally. CI asserts the build plus test-module load integrity.
+      # Validator-backed suites (phase-1 workspace, registry governance,
+      # dispatcher routing, adapter compliance) self-skip when
+      # ANCHOR_PROVIDER_URL is unset (tests/support/validator-suite.ts) and run
+      # fully under `anchor test` locally against a live validator. In CI these
+      # steps assert that every test module loads and compiles cleanly on top
+      # of the freshly built programs; the full dispatcher → registry →
+      # adapter → protocol path is exercised and recorded by the committed
+      # mainnet-fork run manifests (tests/mainnet-fork/manifests/).
       - run: npm run test:unit
+      - run: npm run test:integration

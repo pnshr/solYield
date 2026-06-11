@@ -7,6 +7,7 @@ import {
   PublicKey,
   SystemProgram,
 } from "@solana/web3.js";
+import { describeWithValidator } from "../support/validator-suite";
 
 const ADAPTER_CONFIG_SEED = Buffer.from("adapter_config");
 const USER_POSITION_SEED = Buffer.from("user_position");
@@ -108,7 +109,7 @@ function returnDataU64(simulation: any): number {
   return Number(bytes.readBigUInt64LE(0));
 }
 
-describe("adapter compliance", () => {
+describeWithValidator("adapter compliance", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
